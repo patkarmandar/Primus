@@ -1,0 +1,31 @@
+
+Manual Rooting and Certificate Pinning Bypass without automated tool
+Dynamic instrumentation using Frida
+De-obfuscation of APK/IPA file
+Sandboxing
+DevSecOps
+Threat Modelling
+SAST/DAST
+
+Manual testing 
+Writing custom tools (Python/Go)
+Building security automation pipelines (CI/CD)
+Source code review (SAST)
+Exploit development (rare, but high pay)
+
+Linux basics
+Docker
+Docker Compose
+Kubernetes basics
+Cloud platform (AWS/GCP/Azure)
+Terraform
+CI/CD
+
+Linux
+Docker
+Networking
+Kubernetes
+Cloud
+Terraform
+CI/CD
+Monitoring

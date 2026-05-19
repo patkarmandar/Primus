@@ -32,3 +32,7 @@ https://www.hackingarticles.in/
 https://www.hacksplaining.com/
 https://www.makingsoftware.com/
 https://www.sentinelone.com/cybersecurity-101/
+https://alike-lantern-72d.notion.site/Identity-and-Access-Management-IAM-35b7fe7f721e80c99397ec9eb32bd0b8
+https://razorpay.com/m/fix-my-itch/
+https://github.com/xaferima/API-Pentesting-Checklist
+https://github.com/shieldfy/API-Security-Checklist

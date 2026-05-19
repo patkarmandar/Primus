@@ -483,3 +483,12 @@ Magisk:
     - Many apps check if the device is rooted.
     - Magisk tries to “mask” modifications so these apps continue working.
     - Success depends on Google’s updates and tricks used by the user.
+
+Check for Root Detection Mechanism in code with JADX
+- Keywords: root, isRoot, checkRoot, superuser, su, RootBeer
+- Path: /system/bin/su, /system/xbin/su, /sbin/su, /vendor/bin/su, /system/app/Superuser.apk, /system/app/SuperSU.apk, /system/app/Magisk.apk
+- Command execution checks, Apps run commands: which su, su -c, busybox, id, whoami
+- File existence checks: File.exists, new File(, canExecute, canRead. Example: new File("/system/xbin/su").exists()
+- Package checks (Superuser apps): eu.chainfire.supersu, com.topjohnwu.magisk, com.noshufou.android.su, com.koushikdutta.superuser
+- Root detection libraries: RootBeer, rootbeer, com.scottyab.rootbeer
+- SafetyNet / Play Integrity checks: SafetyNet, PlayIntegrity, ctsProfileMatch, basicIntegrity, MEETS_DEVICE_INTEGRITY

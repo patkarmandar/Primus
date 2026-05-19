@@ -1,0 +1,12 @@
+
+feat: a new feature
+fix: a bug fix
+docs: documentation only changes
+style: code style changes (formatting, missing semicolons, etc.)
+refactor: code change that neither fixes a bug nor adds a feature
+perf: performance improvement
+test: adding or correcting tests
+chore: changes to build process, tooling, etc.
+ci: CI configuration changes
+build: changes that affect the build system or dependencies
+revert: reverts a previous commit

@@ -1,18 +1,4 @@
 
-MobSF
-- Start docker
-- Run:
-    - docker pull opensecurity/mobile-security-framework-mobsf:latest
-    - docker run -it --rm -p 8000:8000 opensecurity/mobile-security-framework-mobsf:latest
-
-JADX
-- Launch JADX-GUI
-- Analyze Code
-
-Apktool
-- Run: apktool d <package>
-- Analyze Codes
-
 => Static Analysis Tools
 - MobSF -> Automated scanner-> Find vulnerabilities automatically
 - Apktool -> Decode APK -> Analyze manifest, smali, structure
@@ -32,59 +18,52 @@ Apktool
 - ADB -> Control device and access files
 - Logcat -> Monitor app logs
 
-=> Setup & Environment Preparation
-- Test Environment
-    - Rooted Android device available
-    - Emulator available
-    - Adb configured
-    - Burp Suite configured
-    - Proxy installed on device
-    - CA certificate installed
-    - Frida installed and working
-    - Objection installed
-- Verify:
-    - adb devices
-    - frida-ps -U
+Magisk
+- Download Magisk and install
+- Extract boot.img from ROM and patch with magisk
+- Flash patched boot.img with fastboot: fastboot flash boot_a magisk_patched_boot.img
+- Reboot: fastboot Reboot
 
-=> Root Detection Bypass
-- Prerequisites: MEmu Emulator (Rooted), Frida, ADB
-- Check connection:
-    - adb devices
-    - adb connect 127.0.0.1:21503
-- Deploy Frida server on MEmu:
-    - Get MEmu Architecture (commonly x86_64): adb shell getprop ro.product.cpu.abi
-    - Download frida-server binary for emulator's architecture
-    - Push downloaded files to the emulator: adb push frida-server /data/local/tmp
-- Run Frida server:
-    - adb shell
-    - cd /data/local/tmp
-    - chmod 755 frida-server
-    - ./frida-server &
-- Verify the installation: frida-ps -U
-- Check for Root Detection Mechanism in code with JADX
-    - Keywords: root, isRoot, checkRoot, superuser, su, RootBeer
-    - Path: /system/bin/su, /system/xbin/su, /sbin/su, /vendor/bin/su, /system/app/Superuser.apk, /system/app/SuperSU.apk, /system/app/Magisk.apk
-    - Command execution checks, Apps run commands: which su, su -c, busybox, id, whoami
-    - File existence checks: File.exists, new File(, canExecute, canRead. Example: new File("/system/xbin/su").exists()
-    - Package checks (Superuser apps): eu.chainfire.supersu, com.topjohnwu.magisk, com.noshufou.android.su, com.koushikdutta.superuser
-    - Root detection libraries: RootBeer, rootbeer, com.scottyab.rootbeer
-    - SafetyNet / Play Integrity checks: SafetyNet, PlayIntegrity, ctsProfileMatch, basicIntegrity, MEETS_DEVICE_INTEGRITY
-- Inject Script: frida -U -f com.ril.rposcentral -l root_bypass.js
+MobSF
+- Start docker
+- Run:
+    - docker pull opensecurity/mobile-security-framework-mobsf:latest
+    - docker run -it --rm -p 8000:8000 opensecurity/mobile-security-framework-mobsf:latest
 
-=> SSL Pinning Bypass
-- Prerequisites: Frida, MEmu
-- Start Frida Server on Emulator:
-    - Copy frida-server to emulator: adb push frida-server /data/local/tmp/
-    - Give permission:
+Drozer
+- Start Drozer Agent Server
+- adb forward tcp:31415 tcp:31415
+- drozer console connect
+- Exported: run app.activity.info -a com.package.app
+- Launch: run app.activity.start --component com.package.app ai.haptik.android.wrapper.sdk.HaptikWebView
+
+JADX
+- Launch JADX-GUI
+- Analyze Code
+
+Apktool
+- Run: apktool d <package>
+- Analyze Codes
+
+Frida
+- Prerequisites: Rooted device/emulator, adb, frida, frida-tools, frida-server
+- Frida Server on Device/Emulator:
+    - Get device/emulator architecture (commonly x86_64): adb shell getprop ro.product.cpu.abi
+    - Download frida-server binary for architecture
+    - Push downloaded frida-server file to the device/emulator: adb push frida-server /data/local/tmp
+    - Copy frida-server to device/emulator: adb push frida-server /data/local/tmp/
+    - Permission:
         - adb shell
         - su
         - chmod 755 /data/local/tmp/frida-server
-    - Run frida-server: /data/local/tmp/frida-server &
+    - Run frida-server: ./data/local/tmp/frida-server &
     - Verify connection: frida-ps -U
+    - OneLiner: adb shell "su -c /data/local/tmp/frida-server-16.1.8-android-arm64"
+    - Frida already running: pkill -f Frida
 - Configure Burp Suite Proxy Listener
     - Open Burp Suite -> Proxy -> Proxy Settings
     - Add -> Bind to port: 8080 -> All interfaces
-- Connect Android device to same WiFi
+- Connect Device/Emulator to same WiFi
 - Configure Proxy on MEmu Emulator
     - Settings -> WiFi -> Modify Network -> Advanced Options
     - Proxy -> Manual -> hostname: <ip> and Port: 8080
@@ -93,12 +72,11 @@ Apktool
     - Download certificate: cacert.der -> Rename to -> cacert.cer
     - Install certificate: Settings -> Security -> Encryption & credentials -> Install certificate -> CA Certificate -> Select cacert.cer
 - Verify Proxy is Working:
-    - Open browser in emulator and visit: http://example.com
-    - You should see traffic in: Burp → Proxy → HTTP History
-- Run SSL Pinning Bypass Script using Frida:
-    - Launch app with Frida: frida -U -f com.package.name -l ssl_bypass.js --no-pause
-    - Or attach to running app: frida -U -n com.package.name -l ssl_bypass.js
-- Confirm SSL Pinning Bypass:
-    - If bypass is successful: HTTPS traffic will appear in Burp
-    - No SSL errors in app
-    - Requests visible in Burp HTTP History
+    - Open browser in emulator and visit: https://google.com
+    - You should see traffic in: Burp -> Proxy -> HTTP History
+- Hook Frida Script:
+    - Launch app: frida -U -f com.package.name -l root_bypass.js --no-pause
+    - Attach to running app: frida -U -n com.package.name -l ssl_bypass.js
+
+ADB
+- Activity Launch: adb shell am start -n com.package.app/com.package.app.MainActivity

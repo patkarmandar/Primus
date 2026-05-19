@@ -1,0 +1,11 @@
+
+Active Scan ++
+Authentication Token Obtain and Replace (ATOR)
+Autorize
+JS Link Finder
+JS Miner
+Param Miner
+Pentagrid Scan Controller
+Retire.JS
+Sensitive Discoverer
+Turbo Intruder
