@@ -1,4 +1,4 @@
-# Application Security VAPT Checklist
+# Application Security Checklist
 > API
 
 ---

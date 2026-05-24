@@ -349,6 +349,7 @@ Primary Defenses:
 
 Additional Protections:
 
+- Stored procedures with strong parameterization
 - Limit Database Privileges (Principle of Least Privilege): The application's database user should have only necessary permissions (e.g., read-only where needed). Do not use a database administrator account for the web application.
 - Proper Error Handling: Do not expose database errors to users. Disable detailed DB error messages in production. Use custom error pages.
 - Use Web Application Firewalls (WAFs): Can block known attack signatures and patterns, providing an additional layer of defense.

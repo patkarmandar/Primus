@@ -492,3 +492,13 @@ Check for Root Detection Mechanism in code with JADX
 - Package checks (Superuser apps): eu.chainfire.supersu, com.topjohnwu.magisk, com.noshufou.android.su, com.koushikdutta.superuser
 - Root detection libraries: RootBeer, rootbeer, com.scottyab.rootbeer
 - SafetyNet / Play Integrity checks: SafetyNet, PlayIntegrity, ctsProfileMatch, basicIntegrity, MEETS_DEVICE_INTEGRITY
+
+Mobile Apps Entry Point
+- Untrusted Environments: Apps run on user-controlled devices where attackers can modify, monitor, or manipulate behavior.
+- Runtime Attack Surface: Attackers can tamper with apps in real time using instrumentation and debugging tools.
+- Hardcoded Secrets & APIs: Sensitive keys or endpoints embedded in apps can be extracted and abused.
+- Wide Attack Surface: Millions of distributed app instances increase opportunities for attackers.
+- Easy Reverse Engineering: APKs can be decompiled to expose business logic, APIs, and sensitive data.
+- Weak or Missing Protections: Lack of root/jailbreak detection, tamper checks, or runtime controls increases exposure.
+- Backend Exposure via App: Even secure backends can be exploited through weak mobile app implementations.
+- User Behavior Risks: Users install apps on compromised devices or fall for malicious overlays and phishing.

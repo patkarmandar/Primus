@@ -1,4 +1,4 @@
-# Application Security VAPT Checklist
+# Application Security Checklist
 > Web
 
 ---
@@ -186,7 +186,15 @@ kxss                    # XSS parameter fuzzing
 - Multiple simultaneous OTP requests (race condition) — check if old OTPs are invalidated
 - Response manipulation to bypass OTP check (`false` → `true`, `0` → `1`)
 
-### 2.5 JWT Testing
+### 2.5 Multi-Factor Authentication (MFA)
+- Bypass attemps: missing MFA after password change, cookie manipulation
+- Rate limiting on OTP endpoints
+- CSRF on MFA verfication
+- Backup codes exposure or reuse
+- Session handling after MFA success
+
+### 2.6 JWT Testing
+- Signature validation
 ```bash
 # Decode & inspect
 jwt.io / jwt_tool
@@ -200,8 +208,9 @@ hashcat -a 0 -m 16500 <token> <wordlist>
 - Token reuse after logout
 - Bad refresh logic — reuse old refresh token
 - JWT tampering — modify `sub`, `role`, `user_id` claims
+- Kid injection
 
-### 2.6 CAPTCHA Bypass
+### 2.7 CAPTCHA Bypass
 - Send old/expired CAPTCHA value
 - Send old CAPTCHA with old session ID
 - Request CAPTCHA absolute path: `www.url.com/captcha/1.png`
@@ -211,7 +220,7 @@ hashcat -a 0 -m 16500 <token> <wordlist>
 - OCR-based solver on simple CAPTCHAs
 - Header injections: `X-Forwarded-For`, `X-Real-IP`
 
-### 2.7 Session Management
+### 2.8 Session Management
 - Decode cookies (Base64, hex, URL) — check for sensitive data
 - Cookie flags: `HttpOnly`, `Secure`, `SameSite`
 - Cookie expiration time
@@ -245,7 +254,9 @@ hashcat -a 0 -m 16500 <token> <wordlist>
 - Check unsubscribe endpoint for user enumeration via ID
 
 ### 3.3 Privilege Escalation (Vertical)
+- Identify critical roles (admin, manager)
 - Modify `role=user` → `role=admin` in params, cookies, or body
+- Use role matrix testing: attempt access to endpoints and data with lower-privilege roles
 - Access restricted paths as lower-privileged user
 - Compare API responses between roles for data leakage
 - Missing role checks on endpoints
@@ -677,7 +688,7 @@ http://attacker.com/shell.txt               # RFI
 - Cart manipulation, order tampering, coupon stacking
 - Payment flow bypass — skip payment, jump to confirmation
 - Refund manipulation via out-of-order workflow steps
-- Race condition: simultaneously redeem multiple coupon/gift codes
+- Race condition: simultaneously redeem multiple coupon/gift codes, double transactions, multiple withdrawals
 - Unlimited redemption of single-use resources
 - Role transitions and assumption flaws
 

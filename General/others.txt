@@ -5,13 +5,18 @@ De-obfuscation of APK/IPA file
 Sandboxing
 DevSecOps
 Threat Modelling
+Threat Intelligence
 SAST/DAST
+Thick clients
 
 Manual testing 
 Writing custom tools (Python/Go)
 Building security automation pipelines (CI/CD)
 Source code review (SAST)
-Exploit development (rare, but high pay)
+Exploit Development
+Reverse Engineering
+Malware analysis
+Digital forensics
 
 Linux basics
 Docker
@@ -20,12 +25,23 @@ Kubernetes basics
 Cloud platform (AWS/GCP/Azure)
 Terraform
 CI/CD
+MCP/LLM/AI AGENTS
 
 Linux
-Docker
 Networking
-Kubernetes
+Infrastructure
+Containerization (Docker/Kubernetes)
+CI/CD Pipelines
+Virtualization
+IAM
+Git
 Cloud
 Terraform
-CI/CD
 Monitoring
+DevSecOps
+Trivy
+Wiz
+Vault
+Cloud-native security
+Cryptography (Encryption/Hashing)
+Access Control and Auth

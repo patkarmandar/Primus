@@ -25,3 +25,8 @@
     - Readability: Both are human-readable, but JSON is considered more readable due to its cleaner syntax.
     - Data Types: XML supports only strings by default, whereas JSON supports multiple data types such as strings, numbers, arrays, and objects.
     - Usage: XML is commonly used in enterprise and legacy systems, while JSON is widely used in modern APIs and web applications.
+
+Impact
+- File read
+- SSRF
+- DoS

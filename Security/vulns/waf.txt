@@ -81,7 +81,7 @@ WAF Bypass Techniques:
     - HTML Encoding:
         - <script> -> &lt;script&gt;
         - If the WAF only blocks <script> but not its encoded form, bypass works.
-- Case Manipulation & Keyword Splitting:
+- Case Variation/Manipulation & Keyword Splitting:
     - Many filters are case-sensitive.
     - Example:
         - UNION SELECT -> uNiOn SeLeCt
