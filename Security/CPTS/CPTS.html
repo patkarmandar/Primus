@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTB CPTS — Complete Study Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #07090F;
+      --surface:   #0D1220;
+      --surf2:     #111827;
+      --border:    #1B2640;
+      --border-b:  #263450;
+      --text:      #E4EAF8;
+      --text-sec:  #7B9DC0;
+      --text-dim:  #405870;
+      --green:     #00D67D;
+      --green-dim: #009E5C;
+      --green-bg:  rgba(0,214,125,.07);
+      --green-glow:rgba(0,214,125,.13);
+      --warn:      #F59E0B;
+      --warn-bg:   rgba(245,158,11,.08);
+      --danger:    #EF4444;
+      --danger-bg: rgba(239,68,68,.08);
+      --info:      #3B82F6;
+      --info-bg:   rgba(59,130,246,.08);
+      --purple:    #8B5CF6;
+      --purple-bg: rgba(139,92,246,.08);
+      --r:         8px;
+      --r-lg:      14px;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body {
+      background:var(--bg);
+      color:var(--text);
+      font-family:'DM Sans',sans-serif;
+      font-size:15px;
+      line-height:1.6;
+      min-height:100vh;
+    }
+    a { color:var(--green); text-decoration:none; transition:opacity .15s; }
+    a:hover { opacity:.7; text-decoration:underline; }
+
+    /* ─── Layout ─── */
+    .wrap { max-width:900px; margin:0 auto; padding:0 24px; }
+
+    /* ─── Hero ─── */
+    .hero {
+      position:relative;
+      overflow:hidden;
+      padding:64px 0 52px;
+      border-bottom:1px solid var(--border);
+    }
+    .hero-grid {
+      position:absolute; inset:0;
+      background-image:
+        linear-gradient(var(--border) 1px,transparent 1px),
+        linear-gradient(90deg,var(--border) 1px,transparent 1px);
+      background-size:48px 48px;
+      opacity:.5;
+      mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,black 20%,transparent 100%);
+    }
+    .hero-glow {
+      position:absolute; top:-80px; left:50%; transform:translateX(-50%);
+      width:700px; height:320px;
+      background:radial-gradient(ellipse,var(--green-glow) 0%,transparent 65%);
+      pointer-events:none;
+    }
+    .hero-inner { position:relative; }
+    .eyebrow {
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px; font-weight:500;
+      letter-spacing:.18em; text-transform:uppercase;
+      color:var(--green);
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:18px;
+    }
+    .eyebrow::before { content:''; width:22px; height:1px; background:var(--green); }
+    .hero h1 {
+      font-family:'Syne',sans-serif;
+      font-size:clamp(30px,5.5vw,50px);
+      font-weight:800; line-height:1.08;
+      color:var(--text); margin-bottom:18px;
+    }
+    .hero h1 em { color:var(--green); font-style:normal; }
+    .hero-desc {
+      font-size:15px; color:var(--text-sec);
+      max-width:560px; line-height:1.75; margin-bottom:32px;
+    }
+    .pill-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .pill {
+      display:flex; align-items:center; gap:6px;
+      background:var(--surface); border:1px solid var(--border-b);
+      border-radius:20px; padding:6px 14px;
+      font-family:'JetBrains Mono',monospace; font-size:12px;
+      color:var(--text-sec);
+    }
+    .pill strong { color:var(--text); font-weight:700; }
+
+    /* ─── Sticky tabs ─── */
+    .tabs-wrap {
+      position:sticky; top:0; z-index:100;
+      background:rgba(7,9,15,.92);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--border);
+    }
+    .tabs { display:flex; gap:0; overflow-x:auto; scrollbar-width:none; }
+    .tabs::-webkit-scrollbar { display:none; }
+    .tab-btn {
+      padding:15px 22px;
+      font-family:'JetBrains Mono',monospace;
+      font-size:11.5px; font-weight:500;
+      letter-spacing:.04em;
+      color:var(--text-dim);
+      background:transparent; border:none;
+      cursor:pointer; white-space:nowrap;
+      position:relative; transition:color .2s;
+    }
+    .tab-btn::after {
+      content:''; position:absolute;
+      bottom:0; left:0; right:0; height:2px;
+      background:var(--green);
+      transform:scaleX(0); transition:transform .2s;
+    }
+    .tab-btn:hover { color:var(--text-sec); }
+    .tab-btn.active { color:var(--green); }
+    .tab-btn.active::after { transform:scaleX(1); }
+
+    /* ─── Content ─── */
+    .content { padding:40px 0 90px; }
+    .panel { display:none; }
+    .panel.active {
+      display:block;
+      animation:fadeUp .25s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ─── Section label ─── */
+    .lbl {
+      font-family:'JetBrains Mono',monospace;
+      font-size:10px; font-weight:700;
+      letter-spacing:.16em; text-transform:uppercase;
+      color:var(--text-dim);
+      margin:36px 0 16px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .lbl::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ─── Callout cards ─── */
+    .callout {
+      border-radius:var(--r);
+      padding:16px 18px;
+      margin-bottom:12px;
+      border-left:3px solid;
+      font-size:14px; line-height:1.75;
+    }
+    .callout .ct {
+      font-weight:600; font-size:13px;
+      margin-bottom:5px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .callout p { color:var(--text-sec); }
+    .c-info   { background:var(--info-bg);   border-color:var(--info);   }
+    .c-warn   { background:var(--warn-bg);   border-color:var(--warn);   }
+    .c-danger { background:var(--danger-bg); border-color:var(--danger); }
+    .c-ok     { background:var(--green-bg);  border-color:var(--green);  }
+    .c-purple { background:var(--purple-bg); border-color:var(--purple); }
+    .c-info   .ct { color:var(--info);   }
+    .c-warn   .ct { color:var(--warn);   }
+    .c-danger .ct { color:var(--danger); }
+    .c-ok     .ct { color:var(--green);  }
+    .c-purple .ct { color:var(--purple); }
+
+    /* ─── Stats grid ─── */
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:28px; }
+    .stat {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--r); padding:16px; text-align:center;
+    }
+    .sv {
+      font-family:'JetBrains Mono',monospace;
+      font-size:24px; font-weight:700; color:var(--green);
+      margin-bottom:4px;
+    }
+    .sl { font-size:12px; color:var(--text-dim); }
+
+    /* ─── Timeline ─── */
+    .timeline { position:relative; padding-left:36px; margin-top:4px; }
+    .timeline::before {
+      content:''; position:absolute;
+      left:9px; top:10px; bottom:10px; width:1px;
+      background:linear-gradient(to bottom,var(--green),var(--border-b));
+    }
+    .tl-item { position:relative; margin-bottom:30px; }
+    .tl-item:last-child { margin-bottom:0; }
+    .tl-dot {
+      position:absolute; left:-36px; top:7px;
+      width:16px; height:16px; border-radius:50%;
+      background:var(--green); border:3px solid var(--bg);
+      box-shadow:0 0 0 1px var(--green), 0 0 12px var(--green-glow);
+    }
+    .tl-item:not(:first-child) .tl-dot {
+      background:var(--surface);
+      box-shadow:0 0 0 1px var(--border-b);
+    }
+    .tl-phase {
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px; font-weight:700; letter-spacing:.05em;
+      color:var(--green); margin-bottom:5px;
+    }
+    .tl-item:not(:first-child) .tl-phase { color:var(--text-dim); }
+    .tl-title {
+      font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px;
+    }
+    .tl-body { font-size:14px; color:var(--text-sec); line-height:1.75; }
+
+    /* ─── Accordion ─── */
+    .acc {
+      border:1px solid var(--border);
+      border-radius:var(--r-lg);
+      margin-bottom:10px;
+      overflow:hidden;
+      transition:border-color .2s;
+    }
+    .acc.open { border-color:var(--border-b); }
+    .acc-hdr {
+      display:flex; align-items:center; gap:14px;
+      padding:16px 20px; cursor:pointer;
+      transition:background .15s;
+      user-select:none;
+    }
+    .acc-hdr:hover { background:var(--surf2); }
+    .acc-num {
+      width:34px; height:34px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
+      flex-shrink:0;
+    }
+    .acc-meta { flex:1; }
+    .acc-title { font-size:15px; font-weight:600; color:var(--text); }
+    .acc-sub {
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px; color:var(--text-dim); margin-top:2px;
+    }
+    .acc-chev {
+      color:var(--text-dim); font-size:16px;
+      transition:transform .25s; flex-shrink:0;
+    }
+    .acc.open .acc-chev { transform:rotate(180deg); }
+    .acc-body {
+      display:none;
+      border-top:1px solid var(--border);
+      padding:16px 20px 22px;
+    }
+    .acc.open .acc-body { display:block; animation:fadeUp .2s ease both; }
+
+    /* ─── Module list ─── */
+    .mods { list-style:none; }
+    .mod {
+      display:flex; align-items:flex-start; gap:12px;
+      padding:11px 0; border-bottom:1px solid var(--border);
+    }
+    .mod:last-child { border-bottom:none; padding-bottom:0; }
+    .m-num {
+      font-family:'JetBrains Mono',monospace; font-size:11px;
+      color:var(--text-dim); min-width:22px; padding-top:2px;
+    }
+    .m-body { flex:1; }
+    .m-name { font-size:14px; font-weight:500; color:var(--text); margin-bottom:2px; }
+    .m-desc { font-size:13px; color:var(--text-sec); line-height:1.55; }
+    .mbadge {
+      font-family:'JetBrains Mono',monospace;
+      font-size:10px; padding:2px 9px; border-radius:20px;
+      white-space:nowrap; align-self:flex-start; margin-top:3px;
+      font-weight:500;
+    }
+    .b-crit { background:rgba(239,68,68,.12); color:#EF4444; border:1px solid rgba(239,68,68,.22); }
+    .b-key  { background:rgba(245,158,11,.12); color:#F59E0B; border:1px solid rgba(245,158,11,.22); }
+    .b-core { background:rgba(59,130,246,.12);  color:#3B82F6; border:1px solid rgba(59,130,246,.22); }
+    .b-cap  { background:rgba(0,214,125,.12);   color:#00D67D; border:1px solid rgba(0,214,125,.22); }
+
+    /* ─── Tool grid ─── */
+    .tool-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(195px,1fr)); gap:10px;
+    }
+    .tool-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--r); padding:14px 16px;
+      transition:border-color .15s, background .15s;
+    }
+    .tool-card:hover { border-color:var(--border-b); background:var(--surf2); }
+    .t-name {
+      font-size:14px; font-weight:600; color:var(--text);
+      margin-bottom:5px;
+      display:flex; align-items:center; gap:7px;
+    }
+    .dot-g { width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; }
+    .t-desc { font-size:13px; color:var(--text-sec); line-height:1.5; }
+
+    /* ─── Flags ─── */
+    .flags { display:flex; flex-wrap:wrap; gap:4px; margin:12px 0; }
+    .flag {
+      width:30px; height:30px; border-radius:6px;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
+    }
+    .f-need { background:var(--green); color:#000; }
+    .f-opt  { background:var(--surface); border:1px solid var(--border-b); color:var(--text-dim); }
+
+    /* ─── Tip list ─── */
+    .tips { list-style:none; }
+    .tip {
+      display:flex; gap:14px;
+      padding:13px 0; border-bottom:1px solid var(--border);
+      font-size:14px; line-height:1.7;
+    }
+    .tip:last-child { border-bottom:none; }
+    .tip-ico { font-size:19px; flex-shrink:0; margin-top:1px; }
+    .tip-txt { color:var(--text-sec); }
+    .tip-txt strong { color:var(--text); }
+
+    /* ─── Exam box ─── */
+    .ebox {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--r-lg); padding:20px; margin-bottom:16px;
+    }
+    .ebox-title { font-weight:600; font-size:14px; margin-bottom:12px; color:var(--text); }
+    .ebox-body  { font-size:14px; color:var(--text-sec); line-height:1.75; }
+
+    /* ─── Resource list ─── */
+    .res-item {
+      display:flex; align-items:flex-start; gap:12px;
+      padding:13px 0; border-bottom:1px solid var(--border); font-size:14px;
+    }
+    .res-item:last-child { border-bottom:none; }
+    .res-dot { width:6px; height:6px; border-radius:50%; background:var(--green); margin-top:8px; flex-shrink:0; }
+    .res-info { flex:1; }
+    .res-name { font-weight:500; color:var(--text); margin-bottom:2px; }
+    .res-name a { color:var(--text); transition:color .15s; }
+    .res-name a:hover { color:var(--green); text-decoration:none; }
+    .res-desc { font-size:13px; color:var(--text-sec); }
+    .res-tag {
+      font-family:'JetBrains Mono',monospace; font-size:10px;
+      padding:2px 9px; border-radius:20px; white-space:nowrap;
+      align-self:flex-start; margin-top:4px;
+      background:var(--green-bg); color:var(--green);
+      border:1px solid rgba(0,214,125,.2);
+    }
+
+    /* ─── Footer ─── */
+    .footer {
+      border-top:1px solid var(--border);
+      padding:24px; text-align:center;
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px; color:var(--text-dim);
+      letter-spacing:.04em;
+    }
+
+    /* ─── Responsive ─── */
+    @media(max-width:640px){
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .tool-grid { grid-template-columns:1fr 1fr; }
+      .pill-row { gap:6px; }
+      .hero { padding:44px 0 36px; }
+    }
+    @media(max-width:420px){
+      .tool-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="wrap hero-inner">
+    <div class="eyebrow">HTB CPTS · Complete Study Guide · 2025–2026</div>
+    <h1>Crack the <em>CPTS</em><br>on your first attempt</h1>
+    <p class="hero-desc">A complete study roadmap for the Hack The Box Certified Penetration Testing Specialist — built from real passers' reviews, post-exam write-ups, and community research across 2024–2026.</p>
+    <div class="pill-row">
+      <div class="pill"><strong>28</strong> Academy modules</div>
+      <div class="pill"><strong>10</strong> Exam days</div>
+      <div class="pill"><strong>12/14</strong> Flags to pass</div>
+      <div class="pill"><strong>3–6 mo</strong> Prep timeline</div>
+      <div class="pill"><strong>~$242</strong> Total (student)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ TABS ═══════════════════ -->
+<div class="tabs-wrap">
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('path')">Study Path</button>
+      <button class="tab-btn" onclick="showTab('modules')">28 Modules</button>
+      <button class="tab-btn" onclick="showTab('tools')">Tools &amp; Setup</button>
+      <button class="tab-btn" onclick="showTab('exam')">Exam Strategy</button>
+      <button class="tab-btn" onclick="showTab('resources')">Resources</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CONTENT ═══════════════════ -->
+<div class="content">
+<div class="wrap">
+
+<!-- ▓▓▓ PANEL: STUDY PATH ▓▓▓ -->
+<div id="panel-path" class="panel active">
+
+  <div class="stats">
+    <div class="stat"><div class="sv">28</div><div class="sl">Modules</div></div>
+    <div class="stat"><div class="sv">10d</div><div class="sl">Exam window</div></div>
+    <div class="stat"><div class="sv">12/14</div><div class="sl">Pass threshold</div></div>
+    <div class="stat"><div class="sv">$210</div><div class="sl">Exam voucher</div></div>
+  </div>
+
+  <div class="callout c-info">
+    <div class="ct">📋 Prerequisites</div>
+    <p>Basic networking (TCP/IP, ports, protocols), Linux command line, and a learning-first mindset. CCNA-level networking or TryHackMe's Jr. Penetration Tester path are solid on-ramps. No formal certification is required to enroll — the Academy path builds from the ground up.</p>
+  </div>
+
+  <div class="lbl">Recommended preparation timeline</div>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Month 0 · Optional — 2 to 4 weeks</div>
+      <div class="tl-title">Foundation before the Academy</div>
+      <div class="tl-body">Complete TryHackMe "Intro to Cybersecurity" and "Jr. Penetration Tester" paths. Consider the eJPT if you are a complete beginner — it sets the mindset. Crucially: set up Obsidian for note-taking from day one. Your personal command reference built now will pay off enormously during the exam.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Months 1–3 · Core Phase</div>
+      <div class="tl-title">HTB Academy — all 28 modules in order</div>
+      <div class="tl-body">Work through every module sequentially. Complete every hands-on exercise and skills assessment — they build on each other and 100% completion is mandatory before you can unlock the exam. Take structured notes after each section explaining every command in your own words, not copy-pasted from the module.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Months 3–4 · Practice Phase</div>
+      <div class="tl-title">External labs and IppSec's CPTS playlist</div>
+      <div class="tl-body">Watch IppSec's retired HTB machine playlist — it maps directly to the CPTS curriculum. Complete the official HTB CPTS Machine Track (76 machines). Attempt ProLab Dante (14 machines, pivoting-heavy). If budget allows, add Zephyr (AD-focused and closest to the actual exam environment). Reviewers who completed a ProLab universally passed on the first attempt.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Month 4–5 · Capstone Phase</div>
+      <div class="tl-title">Attacking Enterprise Networks — completely blind</div>
+      <div class="tl-body">Do the AEN capstone with zero hints and no walkthroughs. Read the letter of engagement, spin up the target, and work through it as a real engagement. Write a complete SysReptor report at the end. This is the closest simulation of the real exam. Afterwards, compare with the guide to fill gaps — then attempt blind again.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-phase">Month 5–6 · Exam Phase</div>
+      <div class="tl-title">Readiness check and sit the exam</div>
+      <div class="tl-body">If AEN was smooth and needed minimal hints, you are ready. Review your personal cheatsheet, finalize your SysReptor template, and snapshot your Kali VM. Start the exam — you have 10 full days. Multiple passers found their rhythm by day 2 or 3, so do not panic if day 1 feels slow.</div>
+    </div>
+  </div>
+
+  <div class="lbl">Key decisions before you start</div>
+
+  <div class="callout c-warn">
+    <div class="ct">💰 Subscription choice</div>
+    <p>Student plan ($8/mo with a .edu email) covers all Tier I and II modules required for CPTS. Silver Annual (~$490/yr) without a student email. Total over 4 months with a student subscription plus exam voucher is approximately $242 USD — one of the most cost-effective professional pentesting certifications available.</p>
+  </div>
+  <div class="callout c-danger">
+    <div class="ct">🚫 You cannot skip the path</div>
+    <p>100% module completion is a hard system gate before you can unlock the exam voucher. Every skills assessment must be submitted and passed. There are no shortcuts — the modules contain knowledge that will be directly tested in the exam environment.</p>
+  </div>
+  <div class="callout c-ok">
+    <div class="ct">✅ AEN is your dress rehearsal — treat it exactly like the real exam</div>
+    <p>Multiple first-attempt passers specifically credited going through AEN blind — with a full SysReptor report — as their single biggest preparation move. If you need heavy assistance during AEN, you need more practice before sitting the actual exam. That is the correct signal to read.</p>
+  </div>
+</div>
+
+<!-- ▓▓▓ PANEL: 28 MODULES ▓▓▓ -->
+<div id="panel-modules" class="panel">
+
+  <div class="callout c-info" style="margin-bottom:24px">
+    <div class="ct">📌 Do them in order — no exceptions</div>
+    <p>Modules build directly on each other. Skipping or jumping around creates invisible knowledge gaps that the exam reliably finds. Every module exists for a reason. The difficulty increases substantially starting around module 20.</p>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="acc open" id="a1">
+    <div class="acc-hdr" onclick="tog('a1')">
+      <div class="acc-num" style="background:var(--info-bg);color:var(--info)">01</div>
+      <div class="acc-meta">
+        <div class="acc-title">Phase 1 — Foundation &amp; Methodology</div>
+        <div class="acc-sub">Modules 01–04 · Mindset, process, deep enumeration</div>
+      </div>
+      <div class="acc-chev">▾</div>
+    </div>
+    <div class="acc-body">
+      <ul class="mods">
+        <li class="mod">
+          <div class="m-num">01</div>
+          <div class="m-body"><div class="m-name">Penetration Testing Process</div><div class="m-desc">Engagement stages, pre-engagement, scoping, legal agreements, rules of engagement, risk management. Establishes the professional framework for every subsequent module.</div></div>
+          <span class="mbadge b-core">core</span>
+        </li>
+        <li class="mod">
+          <div class="m-num">02</div>
+          <div class="m-body"><div class="m-name">Getting Started</div><div class="m-desc">Practical intro attacking a real target (Nibbles HTB machine), establishing workflow patterns, tool basics, and methodology from first contact to root.</div></div>
+          <span class="mbadge b-core">core</span>
+        </li>
+        <li class="mod">
+          <div class="m-num">03</div>
+          <div class="m-body"><div class="m-name">Network Enumeration with Nmap</div><div class="m-desc">Port scanning strategies, timing profiles, service and version detection, OS fingerprinting, NSE script usage and categories. Know your flags cold — this underpins every engagement.</div></div>
+          <span class="mbadge b-crit">critical</span>
+        </li>
+        <li class="mod">
+          <div class="m-num">04</div>
+          <div class="m-body"><div class="m-name">Footprinting</div><div class="m-desc">Deep service enumeration: FTP, SSH, SMB, SNMP, NFS, LDAP, MSSQL, Oracle, IPMI, and more. This module is comprehensive and lengthy — do not rush it. The exam tests every service covered here.</div></div>
+          <span class="mbadge b-crit">critical</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="acc" id="a2">
+    <div class="acc-hdr" onclick="tog('a2')">
+      <div class="acc-num" style="background:var(--warn-bg);color:var(--warn)">02</div>
+      <div class="acc-meta">
+        <div class="acc-title">Phase 2 — Web Attacks</div>
+        <div class="acc-sub">Modules 05–16 · Full web exploitation stack</div>
+      </div>
+      <div class="acc-chev">▾</div>
+    </div>
+    <div class="acc-body">
+      <ul class="mods">
+        <li class="mod"><div class="m-num">05</div><div class="m-body"><div class="m-name">Information Gathering — Web Edition</div><div class="m-desc">OSINT techniques, subdomain enumeration, technology fingerprinting, Google dorking, certificate transparency logs, crawling strategies.</div></div><span class="mbadge b-core">core</span></li>
+        <li class="mod"><div class="m-num">06</div><div class="m-body"><div class="m-name">Vulnerability Assessment</div><div class="m-desc">Nessus, OpenVAS, CVSS scoring, prioritizing scanner output, separating real risk from noise. Understanding the assessment phase of a real engagement.</div></div><span class="mbadge b-core">core</span></li>
+        <li class="mod"><div class="m-num">07</div><div class="m-body"><div class="m-name">Using Web Proxies</div><div class="m-desc">Burp Suite (repeater, intruder, scanner, extensions), OWASP ZAP. Mastering the proxy is non-negotiable for every web attack chain in the exam.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">08</div><div class="m-body"><div class="m-name">Attacking Web Applications with Ffuf</div><div class="m-desc">Directory, resource, parameter, extension, and vhost fuzzing. Recursive scan patterns, wordlist selection, filtering strategies. Know every flag.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">09</div><div class="m-body"><div class="m-name">Login Brute Forcing</div><div class="m-desc">Hydra, Medusa, Burp Intruder. Rate limiting, lockout handling, default credential lists, credential stuffing from leaked databases.</div></div><span class="mbadge b-core">core</span></li>
+        <li class="mod"><div class="m-num">10</div><div class="m-body"><div class="m-name">SQL Injection Fundamentals</div><div class="m-desc">Union-based, error-based, blind boolean, and time-based injection. Manual exploitation before tools. Understand the mechanics — the exam expects this understanding.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">11</div><div class="m-body"><div class="m-name">SQLMap Essentials</div><div class="m-desc">Automated SQLi exploitation, tamper scripts, DBMS-specific dump techniques, blind injection optimization, session cookies.</div></div><span class="mbadge b-core">core</span></li>
+        <li class="mod"><div class="m-num">12</div><div class="m-body"><div class="m-name">Cross-Site Scripting (XSS)</div><div class="m-desc">Reflected, stored, and DOM-based XSS. Cookie theft, session hijacking, phishing via XSS, and filter bypass techniques.</div></div><span class="mbadge b-core">core</span></li>
+        <li class="mod"><div class="m-num">13</div><div class="m-body"><div class="m-name">File Inclusion</div><div class="m-desc">LFI, RFI, PHP filter chains, log poisoning to RCE, null bytes, path traversal, PHP session file injection. LFI to RCE chains appear in the exam.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">14</div><div class="m-body"><div class="m-name">File Upload Attacks</div><div class="m-desc">Client-side and server-side filter bypasses, content-type spoofing, double extension tricks, SVG and ImageMagick vectors, webshell deployment.</div></div><span class="mbadge b-key">key</span></li>
+        <li class="mod"><div class="m-num">15</div><div class="m-body"><div class="m-name">Command Injection</div><div class="m-desc">Command chaining operators, environment variable injection, filter bypass, blind injection with out-of-band detection via ping or DNS.</div></div><span class="mbadge b-key">key</span></li>
+        <li class="mod"><div class="m-num">16</div><div class="m-body"><div class="m-name">Web Attacks</div><div class="m-desc">HTTP verb tampering, Insecure Direct Object Reference (IDOR), XML External Entity (XXE) in-band and out-of-band, SSRF basics, request smuggling intro.</div></div><span class="mbadge b-key">key</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="acc" id="a3">
+    <div class="acc-hdr" onclick="tog('a3')">
+      <div class="acc-num" style="background:var(--danger-bg);color:var(--danger)">03</div>
+      <div class="acc-meta">
+        <div class="acc-title">Phase 3 — Infrastructure &amp; Post-Exploitation</div>
+        <div class="acc-sub">Modules 17–22 · Shells, pivoting, credentials</div>
+      </div>
+      <div class="acc-chev">▾</div>
+    </div>
+    <div class="acc-body">
+      <ul class="mods">
+        <li class="mod"><div class="m-num">17</div><div class="m-body"><div class="m-name">File Transfers</div><div class="m-desc">Exfiltration and staging via HTTP, raw sockets, SMB, base64 encoding, PowerShell download cradles, certutil, Impacket SMB server. Know every transfer method — the exam blocks certain ones.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">18</div><div class="m-body"><div class="m-name">Shells &amp; Payloads</div><div class="m-desc">Bind and reverse shells, staged vs stageless payloads, msfvenom, web shells, maintaining footholds, shell upgrading (pty).</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">19</div><div class="m-body"><div class="m-name">Using the Metasploit Framework</div><div class="m-desc">Framework workflow, auxiliary and exploit modules, Meterpreter, post-exploitation scripts, pivoting within Metasploit. Understand what it's doing under the hood.</div></div><span class="mbadge b-core">core</span></li>
+        <li class="mod"><div class="m-num">20</div><div class="m-body"><div class="m-name">Password Attacks</div><div class="m-desc">Offline cracking with Hashcat and John the Ripper, hash identification, rulesets, credential harvesting from memory, SAM, NTDS, and config files.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">21</div><div class="m-body"><div class="m-name">Attacking Common Services</div><div class="m-desc">RDP, SSH, FTP, SMB, WinRM, MSSQL, MySQL exploitation. Protocol-specific attack patterns, anonymous/guest access, service misconfigurations.</div></div><span class="mbadge b-key">key</span></li>
+        <li class="mod"><div class="m-num">22</div><div class="m-body"><div class="m-name">Pivoting, Tunneling &amp; Port Forwarding</div><div class="m-desc">Ligolo-ng (primary — learn multi-hop), Chisel, SSH dynamic forwarding, socks5 proxychains, double-pivoting across multiple subnets. This is exam-critical.</div></div><span class="mbadge b-crit">critical</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="acc" id="a4">
+    <div class="acc-hdr" onclick="tog('a4')">
+      <div class="acc-num" style="background:var(--green-bg);color:var(--green)">04</div>
+      <div class="acc-meta">
+        <div class="acc-title">Phase 4 — Active Directory &amp; Privilege Escalation</div>
+        <div class="acc-sub">Modules 23–26 · The heart of the exam</div>
+      </div>
+      <div class="acc-chev">▾</div>
+    </div>
+    <div class="acc-body">
+      <ul class="mods">
+        <li class="mod"><div class="m-num">23</div><div class="m-body"><div class="m-name">Active Directory Enumeration &amp; Attacks</div><div class="m-desc">Kerberoasting, AS-REP roasting, ACL abuse, GPO attacks, DCSync, Pass-the-Hash, Pass-the-Ticket, cross-domain trust attacks, BloodHound path analysis. The largest and most important module — go slow and practice every technique.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">24</div><div class="m-body"><div class="m-name">Attacking Common Applications</div><div class="m-desc">CMSes (WordPress, Drupal, Joomla), Apache Tomcat RCE, Jenkins console exploitation, thick client apps, GitLab, enterprise application stacks.</div></div><span class="mbadge b-key">key</span></li>
+        <li class="mod"><div class="m-num">25</div><div class="m-body"><div class="m-name">Linux Privilege Escalation</div><div class="m-desc">SUID/SGID binaries, world-writable scripts, cronjob hijacking, sudo misconfiguration, PATH hijacking, weak service permissions, capabilities, kernel exploits.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">26</div><div class="m-body"><div class="m-name">Windows Privilege Escalation</div><div class="m-desc">Token impersonation (Potato attacks), service binary hijacking, registry autoruns, AlwaysInstallElevated, vulnerable driver exploits, DLL hijacking.</div></div><span class="mbadge b-crit">critical</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="acc" id="a5">
+    <div class="acc-hdr" onclick="tog('a5')">
+      <div class="acc-num" style="background:var(--purple-bg);color:var(--purple)">05</div>
+      <div class="acc-meta">
+        <div class="acc-title">Phase 5 — Reporting &amp; Capstone</div>
+        <div class="acc-sub">Modules 27–28 · Your actual ticket to passing</div>
+      </div>
+      <div class="acc-chev">▾</div>
+    </div>
+    <div class="acc-body">
+      <ul class="mods">
+        <li class="mod"><div class="m-num">27</div><div class="m-body"><div class="m-name">Documentation &amp; Reporting</div><div class="m-desc">Executive summary writing, finding structure (narrative + evidence + impact + remediation), CVSS scoring, professional report formatting. Read this module word for word — HTB uses its exact structure as the grading rubric for your exam report.</div></div><span class="mbadge b-crit">critical</span></li>
+        <li class="mod"><div class="m-num">28</div><div class="m-body"><div class="m-name">Attacking Enterprise Networks (AEN — Capstone)</div><div class="m-desc">Full-scope multi-machine capstone: Linux machines, Windows machines, Active Directory domains, multiple subnets. Do it completely blind first, then with the guide. Write a full SysReptor report both times.</div></div><span class="mbadge b-cap">capstone</span></li>
+      </ul>
+      <div class="callout c-danger" style="margin-top:16px">
+        <div class="ct">⚠️ Reporting is literally half the exam</div>
+        <p>You can obtain all 14 flags and still fail with a poorly written report. HTB evaluates report quality rigorously: structure, evidence quality, impact statements, and remediation guidance all count. Passers submitted 100–230 page reports. Use the exact structure from the Documentation &amp; Reporting module — it is the grading rubric.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ▓▓▓ PANEL: TOOLS & SETUP ▓▓▓ -->
+<div id="panel-tools" class="panel">
+
+  <div class="lbl">Core tools to master before exam day</div>
+  <div class="tool-grid">
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Nmap</div><div class="t-desc">Port scanning, service detection, NSE scripts. Know every timing flag and major script category cold.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>NetExec (CrackMapExec)</div><div class="t-desc">Credential validation, lateral movement across SMB, WinRM, RDP, LDAP. Your primary lateral movement tool throughout the exam.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Ligolo-ng</div><div class="t-desc">Encrypted TLS tunneling. Dramatically cleaner than proxychains. Practice multi-hop. Build static binaries from source — don't trust precompiled releases.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>BloodHound / SharpHound</div><div class="t-desc">AD privilege path mapping. Run SharpHound immediately on any AD foothold. BloodHound visualizes attack paths you would never find manually.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Impacket Suite</div><div class="t-desc">Kerberoasting, AS-REP roasting, secretsdump, wmiexec, smbclient, mssqlclient. Know each script and when to use it.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>PowerView</div><div class="t-desc">AD recon — users, groups, ACLs, trust relationships, delegation settings, GPO enumeration. The AD pentester's best friend.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Rubeus</div><div class="t-desc">Kerberos tooling — Kerberoasting, AS-REP roasting, ticket manipulation, S4U2Self/S4U2Proxy delegation abuse, overpass-the-hash.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>PowerUp / WinPEAS</div><div class="t-desc">Windows local privilege escalation discovery. Service exploits, registry paths, token abuse, scheduled tasks. Run both and compare.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>LinPEAS</div><div class="t-desc">Automated Linux privilege escalation enumeration. SUID/SGID, writable scripts, sudo misconfigs, capabilities, cron jobs.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Evil-WinRM</div><div class="t-desc">PowerShell remoting over WinRM. Your primary interactive shell for Windows post-exploitation and file transfers.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Ffuf</div><div class="t-desc">Web fuzzing — directories, parameters, vhosts, file extensions. Know every filtering flag and maintain a curated wordlist collection.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Hashcat + JtR</div><div class="t-desc">Offline password cracking. Know hash type numbers (-m values), rulesets (best64, OneRuleToRuleThemAll), and rockyou variants.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Burp Suite Community</div><div class="t-desc">Web proxy — repeater, intruder, decoder, comparer. Master the core features cold. Community edition is sufficient for CPTS.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Metasploit / MSFvenom</div><div class="t-desc">Staged and stageless payloads, Meterpreter, local exploit suggester. Know what it does — but don't over-rely on it.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Responder</div><div class="t-desc">LLMNR/NBT-NS/mDNS poisoning for credential capture. Know when and when not to run it in a given network environment.</div></div>
+    <div class="tool-card"><div class="t-name"><div class="dot-g"></div>Chisel</div><div class="t-desc">TCP tunneling over HTTP — useful backup when Ligolo-ng cannot be deployed. Know both client and server modes.</div></div>
+  </div>
+
+  <div class="lbl">Note-taking — Obsidian setup</div>
+  <div class="callout c-info">
+    <div class="ct">📓 Build your personal HackTricks from day one</div>
+    <p>Use Obsidian with a structured vault pushed to a private GitHub repository. Organize by: Attack Category → Tool → Technique → Command with explanation. Write what each flag does rather than just the command. Sync across devices with Git. Reviewers who built this habit found the exam significantly less stressful — their notes worked as a personal reference under pressure.</p>
+  </div>
+  <div class="callout c-warn">
+    <div class="ct">⚠️ Writing things down does not equal understanding them</div>
+    <p>Many candidates copy-paste commands from modules into Obsidian without understanding what the flags do. These notes become useless under exam pressure. Force yourself to explain every technique in your own words — if you can explain it to someone else, you own it. Your notes should be useful to a "future you" with zero context.</p>
+  </div>
+
+  <div class="lbl">Report writing — SysReptor</div>
+  <div class="callout c-ok">
+    <div class="ct">📄 Set up SysReptor before the exam — use it during AEN first</div>
+    <p>SysReptor is the community-preferred reporting tool with an official HTB-aligned template. It is Markdown-based, renders to a clean professional PDF, and includes pre-built finding templates matching HTB's expected report structure. Install and use it for your AEN blind run — you do not want to be learning the tool on exam day. GitHub: Syslifters/HackTheBox-Reporting.</p>
+  </div>
+
+  <div class="lbl">Attack platform setup</div>
+  <div class="callout c-purple">
+    <div class="ct">🖥️ Prepare everything before exam day — snapshot your VM</div>
+    <p>Install and thoroughly test Ligolo-ng (built from source), NetExec, BloodHound, and all tooling before the exam starts. Take a Kali VM snapshot after setup completes. Set up HTB Pwnbox as a backup attack platform — if your local VM loses VPN connectivity mid-exam, Pwnbox keeps you running immediately without losing momentum.</p>
+  </div>
+</div>
+
+<!-- ▓▓▓ PANEL: EXAM STRATEGY ▓▓▓ -->
+<div id="panel-exam" class="panel">
+
+  <div class="lbl">Exam format overview</div>
+  <div class="ebox">
+    <div class="ebox-title">🎯 Flags required to pass</div>
+    <div class="flags">
+      <div class="flag f-need">1</div><div class="flag f-need">2</div><div class="flag f-need">3</div>
+      <div class="flag f-need">4</div><div class="flag f-need">5</div><div class="flag f-need">6</div>
+      <div class="flag f-need">7</div><div class="flag f-need">8</div><div class="flag f-need">9</div>
+      <div class="flag f-need">10</div><div class="flag f-need">11</div><div class="flag f-need">12</div>
+      <div class="flag f-opt">13</div><div class="flag f-opt">14</div>
+    </div>
+    <div style="font-size:13px;color:var(--text-sec);margin-top:8px"><strong style="color:var(--green)">Green = minimum to pass (12 of 14).</strong> Grey = optional bonus. But the report determines pass or fail — flags without a quality report will fail you regardless of count.</div>
+  </div>
+  <div class="ebox">
+    <div class="ebox-title">🏗️ Environment structure</div>
+    <div class="ebox-body">Approximately 8 machines (mix of Linux and Windows), multiple subnets requiring active pivoting, at least one Active Directory domain with trust relationships and privilege chains. You receive a letter of engagement with scope, objectives, and rules — read it carefully and completely before touching anything. The environment simulates a real enterprise network with realistic misconfigurations.</div>
+  </div>
+
+  <div class="lbl">Day-by-day exam strategy from first-attempt passers</div>
+
+  <div class="callout c-info">
+    <div class="ct">📅 Days 1–2: slow down, enumerate everything</div>
+    <p>Read the letter of engagement before touching any target. Complete full network discovery before attempting exploits. Multiple first-attempt passers obtained zero flags in the first two days — this is completely normal. Document everything from minute one: discovered IPs, open ports, running services, credentials found, every useful command output with clean annotated screenshots.</p>
+  </div>
+  <div class="callout c-warn">
+    <div class="ct">📅 Days 3–7: build momentum, don't get tunnel vision</div>
+    <p>Once you find the first foothold the environment opens up. Deploy Ligolo-ng for pivoting, run SharpHound immediately in any AD environment and review results in BloodHound before manual enumeration. Do not spend more than 4–6 hours stuck on a single machine — pivot to another target and return with fresh eyes. Reset the environment if tools behave unexpectedly.</p>
+  </div>
+  <div class="callout c-ok">
+    <div class="ct">📅 Days 7–9: stop hacking at 12+ flags, start the report</div>
+    <p>Once you reach 12 flags, shift completely into reporting mode. Return through the environment to capture clean, annotated, high-quality screenshots for each finding. Do not sacrifice report quality chasing the final 1–2 optional flags. The report is where you pass or fail — a complete report with 12 flags beats a sloppy report with 14.</p>
+  </div>
+  <div class="callout c-danger">
+    <div class="ct">📋 Report requirements — the report IS the exam</div>
+    <p>Your report must include: an executive summary written for a non-technical C-level reader; an attack path narrative showing how you moved through the environment; individual findings with CVSS severity ratings; full evidence (annotated screenshots for every flag and every key exploitation step); and specific actionable remediation recommendations. Use the exact structure from the Documentation &amp; Reporting module.</p>
+  </div>
+
+  <div class="lbl">Tips from real first-attempt passers</div>
+  <ul class="tips">
+    <li class="tip"><div class="tip-ico">📸</div><div class="tip-txt"><strong>Screenshot everything the moment you find it.</strong> Credentials, shell prompts, flag submission screens, privilege escalation steps — capture all of it immediately. You will deeply regret the missing screenshot when writing the report eight days later.</div></li>
+    <li class="tip"><div class="tip-ico">🔄</div><div class="tip-txt"><strong>Reset the environment if tools misbehave.</strong> Exam labs can become unstable. Do not spend hours debugging a broken environment — a reset takes 15 minutes and frequently resolves mysterious tool or connectivity failures that aren't your fault.</div></li>
+    <li class="tip"><div class="tip-ico">🔌</div><div class="tip-txt"><strong>Set up Pwnbox as a backup attack platform before day one.</strong> If your local Kali VM loses internet or VPN connectivity mid-exam, Pwnbox allows you to resume immediately without losing momentum or wasting exam time.</div></li>
+    <li class="tip"><div class="tip-ico">🗺️</div><div class="tip-txt"><strong>Diagram the network as you discover it.</strong> Use Excalidraw or draw.io to map discovered hosts, subnets, credentials, and pivot chains. Visualizing the complete network prevents routing mistakes and makes lateral movement planning dramatically easier.</div></li>
+    <li class="tip"><div class="tip-ico">😴</div><div class="tip-txt"><strong>Sleep. The exam is 10 days, not a 48-hour sprint.</strong> An exhausted mind misses obvious attack vectors. Multiple reviewers specifically mentioned solving machines they were stuck on for hours after getting a full night of sleep and returning with fresh perspective.</div></li>
+    <li class="tip"><div class="tip-ico">🔧</div><div class="tip-txt"><strong>Compile Ligolo-ng static binaries from source before the exam.</strong> At least one reviewer had precompiled GitHub release binaries fail in the exam environment. Compile from source, test against your practice machines, and bundle the binaries in your tooling before day one.</div></li>
+    <li class="tip"><div class="tip-ico">📝</div><div class="tip-txt"><strong>Maintain a running notes file throughout the exam.</strong> Record every command run, credential discovered, service identified, and anomaly observed. Your exam notes become the evidence base for your report — clean structured notes produce clean structured reports.</div></li>
+    <li class="tip"><div class="tip-ico">🩸</div><div class="tip-txt"><strong>Run BloodHound immediately in every Active Directory environment.</strong> Do not manually enumerate AD relationships before you have a BloodHound graph. Let it map the entire privilege chain visually, then choose the most efficient attack path based on what it reveals.</div></li>
+  </ul>
+</div>
+
+<!-- ▓▓▓ PANEL: RESOURCES ▓▓▓ -->
+<div id="panel-resources" class="panel">
+
+  <div class="callout c-ok" style="margin-bottom:28px">
+    <div class="ct">🧭 Priority order for all resources</div>
+    <p>HTB Academy is primary. Everything else supplements it. Do not start supplementary resources before completing at least 50% of the Academy path — the context from the modules is necessary to absorb external content effectively.</p>
+  </div>
+
+  <div class="lbl">Official resources</div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://academy.hackthebox.com/path/preview/penetration-tester" target="_blank">HTB Academy — Penetration Tester Path</a></div><div class="res-desc">All 28 modules in order. Your primary resource. 100% completion is required to unlock the exam voucher. Every section has hands-on labs that must be completed.</div></div><span class="res-tag">required</span></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://www.hackthebox.com/certifications/htb-certified-penetration-testing-specialist" target="_blank">CPTS Certification Page — HackTheBox</a></div><div class="res-desc">Official exam overview, pricing, attempt rules, and voucher purchase. Check for updated exam information before sitting.</div></div><span class="res-tag">official</span></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://github.com/Syslifters/HackTheBox-Reporting" target="_blank">SysReptor HTB Reporting Templates (GitHub)</a></div><div class="res-desc">Official HTB-aligned reporting templates for SysReptor. Install and use during your AEN capstone. Learn the tool before exam day, not during it.</div></div><span class="res-tag">required</span></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://app.hackthebox.com/tracks/76" target="_blank">HTB CPTS Machine Track (76 machines)</a></div><div class="res-desc">Official machine track curated to align directly with the CPTS curriculum. Work through these alongside the Academy modules for hands-on reinforcement of each topic.</div></div><span class="res-tag">recommended</span></div>
+
+  <div class="lbl">Video resources</div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://www.youtube.com/@ippsec" target="_blank">IppSec — Unofficial CPTS Playlist</a></div><div class="res-desc">Retired HTB machines mapped directly to the CPTS curriculum. Watching IppSec work through a box live teaches methodology that text alone cannot convey.</div></div><span class="res-tag">highly recommended</span></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://0xdf.gitlab.io" target="_blank">0xdf Hacks Stuff — Deep-dive walkthroughs</a></div><div class="res-desc">Detailed writeups with exceptional methodology focus. Excellent for understanding the reasoning behind attack choices, not just the commands executed.</div></div><span class="res-tag">recommended</span></div>
+
+  <div class="lbl">Must-read reviews and blogs</div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://radiantsec.io/blog/htb-cpts-review/" target="_blank">Radiant Sec — CPTS Review (1st attempt, 13/14 flags, 2025)</a></div><div class="res-desc">Detailed first-attempt pass account with prep timeline, exam day experience, and specific retrospective on what mattered most.</div></div></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://rezydev.com/writeups/hackthebox/ultimate-htb-cpts-guide" target="_blank">Rezy Dev — Ultimate CPTS Guide with ProLabs Strategy</a></div><div class="res-desc">The most comprehensive community guide available. Includes module-by-module notes, ProLab recommendations, exam day tips, and SysReptor setup.</div></div></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://www.brunorochamoura.com/posts/cpts-tips/" target="_blank">Bruno Rocha Moura — CPTS Tips and Tricks</a></div><div class="res-desc">Particularly strong on the reporting side and note-taking strategy. Practical operational tips from someone who recently passed.</div></div></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://yashfren.github.io/posts/CPTSExperience/" target="_blank">Yash — CPTS Experience (critical Ligolo binary tip)</a></div><div class="res-desc">The reviewer who discovered that precompiled Ligolo-ng binaries may fail in the exam environment. Contains the "compile from source" advice that every candidate should read.</div></div></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://medium.com/@charlesthibaultsanc/htb-cpts-review-2026-849d2e1b9b27" target="_blank">Charles-Thibault Sanchez — CPTS Review 2026</a></div><div class="res-desc">Most recent post-exam review available. Updated environment observations, current tooling recommendations, and reporting guidance reflecting current exam conditions.</div></div></div>
+
+  <div class="lbl">Supplementary learning</div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://book.hacktricks.xyz" target="_blank">HackTricks — The pentester's encyclopedia</a></div><div class="res-desc">The definitive reference for attack techniques, privilege escalation methods, and service-specific attack patterns. Bookmark it — you will use it throughout preparation and during the exam.</div></div></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://github.com/swisskyrepo/PayloadsAllTheThings" target="_blank">PayloadsAllTheThings — Comprehensive payload reference</a></div><div class="res-desc">Every payload type organized by vulnerability class: web, network, SSRF, XXE, SSTI, and more. Import relevant pages directly into your Obsidian vault.</div></div></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://portswigger.net/web-security" target="_blank">PortSwigger Web Security Academy</a></div><div class="res-desc">Free interactive web vulnerability training. Use it to deepen SQLi, XSS, SSRF, and other web attack knowledge beyond what the Academy modules cover.</div></div></div>
+  <div class="res-item"><div class="res-dot"></div><div class="res-info"><div class="res-name"><a href="https://tryhackme.com/path/outline/jr-penetration-tester" target="_blank">TryHackMe — Jr. Penetration Tester Path</a></div><div class="res-desc">Optional pre-Academy path for complete beginners. Builds confidence and fills networking and Linux gaps before the main HTB Academy course.</div></div></div>
+
+  <div class="lbl">ProLabs — optional but strongly recommended</div>
+  <div class="callout c-info">
+    <div class="ct">🏆 Dante first, then Zephyr</div>
+    <p><strong>Dante</strong> (14 machines, beginner-friendly): pivoting-heavy, great for solidifying lateral movement across multiple subnets in a realistic environment. <strong>Zephyr</strong> (intermediate difficulty): AD-focused with complex privilege chains — multiple reviewers described it as the closest ProLab experience to the actual CPTS exam environment. Both are add-on subscriptions (~$15–20/mo). Every reviewer who completed a ProLab before sitting the exam passed on their first attempt.</p>
+  </div>
+
+</div>
+
+</div><!-- /wrap -->
+</div><!-- /content -->
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  HTB CPTS Complete Study Guide &nbsp;·&nbsp; Built from real passer reviews 2024–2026 &nbsp;·&nbsp; Good luck on the exam
+</footer>
+
+<script>
+  const tabIds = ['path','modules','tools','exam','resources'];
+
+  function showTab(id) {
+    tabIds.forEach((t, i) => {
+      const btn = document.querySelectorAll('.tab-btn')[i];
+      const panel = document.getElementById('panel-' + t);
+      btn.classList.toggle('active', t === id);
+      panel.classList.toggle('active', t === id);
+    });
+    document.querySelector('.tabs-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function tog(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
+  }
+
+  // Open phase 1 by default
+  document.getElementById('a1').classList.add('open');
+</script>
+</body>
+</html>
