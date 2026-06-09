@@ -88,3 +88,5 @@ Always Trust User Certificates
 MagiskHide Props Config
 Play Integrity Fix
 Shamiko
+LSPosed
+XPosed

@@ -1,28 +1,20 @@
 <!DOCTYPE html>
 <html>
 <body style="margin: 2rem;">
-    <h3>Cross-Frame Scripting (XFS)</h3>
-    <form onsubmit="f(); return false;">
-        <input id="u" placeholder="https://example.com" style="width:25%;" required>
+    <h2>Cross-Frame Scripting (XFS)</h2>
+    <form onsubmit="loads(); return false;">
+        <input id="url" placeholder="https://example.com" style="width:25%;" required>
         <button type="submit">Check</button>
     </form>
 
-    <p id="s"></p>
-    <iframe id="i" style="width:70%;height:500px;opacity:0.75"></iframe>
+    <iframe id="frame" style="margin-top:1rem;width:70%;height:500px;opacity:0.75"></iframe>
 </body>
 <script>
-    function f(){
-        let url=u.value.trim(), i=document.getElementById("i"), s=document.getElementById("s");
-
-        s.innerText="Testing...";
-        i.onload = null;
-        i.src = "about:blank"; // reset iframe first
-
-        setTimeout(()=>{ // small delay before loading target
-            let t=setTimeout(()=>s.innerText="❌ Blocked / Not frameable",6000);
-            i.onload=()=>{ clearTimeout(t); s.innerText="✅ Frameable"; };
-            i.src=url;
-        },200);
+    function loads(){
+        let frame = document.getElementById("frame");
+        frame.onload = null;
+        frame.src = "about:blank";
+        setTimeout(()=>{ frame.src=url.value.trim(); },200);
     }
 </script>
 </html>
