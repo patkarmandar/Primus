@@ -50,3 +50,8 @@ Vault
 Cloud-native security
 Cryptography (Encryption/Hashing)
 Access Control and Auth
+
+Midleware
+Routes
+Endpoints
+Gateway
