@@ -41,12 +41,13 @@ Web Vulnerabilities:
     - Rate Limiting Bypass
     - HTTP Request Smuggling
     - HTTP Parameter Pollution (HPP)
+    - Remote Code Execution (RCE)
 - File & Resource Handling:
     - Unrestricted File Upload (Malicious file execution, MIME type bypass)
     - Magic Byte Bypass (File upload with manipulated magic bytes)
     - Null Byte Injection (Bypass file extension checks)
 - Cache & Redirection:
-    - Open Redirect
+    - Open Redirection
     - Web Cache Poisoning
     - Web Cache Deception
     - Response Manipulation (Parameter pollution, status code injection)
@@ -82,3 +83,4 @@ Other / Infrastructure:
 - SMTP Injection
 - Buffer Overflow (Native code, Android NDK)
 - Format String Attack (Legacy or native components)
+- Account Takeover

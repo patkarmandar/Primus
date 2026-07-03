@@ -31,8 +31,9 @@ MobSF
     - docker run -it --rm -p 8000:8000 opensecurity/mobile-security-framework-mobsf:latest
 
 Drozer
-- Start Drozer Agent Server
+- Downlaod and start drozer-agent server on android device
 - adb forward tcp:31415 tcp:31415
+- adb shell
 - drozer console connect
 - Exported: run app.activity.info -a com.package.app
 - Launch: run app.activity.start --component com.package.app ai.haptik.android.wrapper.sdk.HaptikWebView

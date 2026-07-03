@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — API Token Validator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020408;
+    --bg2: #060d14;
+    --bg3: #0a1520;
+    --panel: rgba(0,220,255,0.03);
+    --border: rgba(0,220,255,0.15);
+    --border-hot: rgba(0,220,255,0.6);
+    --cyan: #00dcff;
+    --cyan2: #00ffcc;
+    --red: #ff2d55;
+    --green: #00ff88;
+    --yellow: #ffd60a;
+    --purple: #bf5af2;
+    --orange: #ff6b35;
+    --text: #c8e8f0;
+    --text-dim: #4a7080;
+    --text-muted: #2a4050;
+    --glow: 0 0 20px rgba(0,220,255,0.3);
+    --glow-strong: 0 0 40px rgba(0,220,255,0.5);
+    --scan-speed: 3s;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,220,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,220,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Scanline effect */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .noise {
+    position: fixed;
+    inset: 0;
+    opacity: 0.02;
+    pointer-events: none;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* HEADER */
+  header {
+    padding: 30px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+    position: relative;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logo-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    color: var(--cyan);
+    text-shadow: var(--glow-strong), 0 0 80px rgba(0,220,255,0.3);
+    line-height: 1;
+  }
+
+  .logo-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.4em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    position: relative;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .stat-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  .stat-lbl {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+  }
+
+  /* Blinking cursor */
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor::after { content: '█'; animation: blink 1s infinite; }
+
+  /* Corner decorations */
+  .corner-tl, .corner-br {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: var(--cyan);
+    border-style: solid;
+    opacity: 0.5;
+  }
+  .corner-tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+  .corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.35em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-hot), transparent);
+  }
+
+  /* CATEGORIES */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+
+  .category-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  }
+
+  .category-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 16px;
+    width: calc(100% - 16px);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .category-card:hover {
+    border-color: var(--border-hot);
+    box-shadow: var(--glow);
+  }
+
+  .category-card:hover::before { opacity: 1; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .cat-icon {
+    font-size: 1.4rem;
+    width: 36px;
+    text-align: center;
+  }
+
+  .cat-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    color: var(--cyan);
+  }
+
+  .cat-badge {
+    margin-left: auto;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    letter-spacing: 0.2em;
+    border: 1px solid;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+
+  .badge-ai { border-color: var(--purple); color: var(--purple); }
+  .badge-maps { border-color: var(--cyan2); color: var(--cyan2); }
+  .badge-search { border-color: var(--yellow); color: var(--yellow); }
+  .badge-cloud { border-color: var(--orange); color: var(--orange); }
+  .badge-social { border-color: var(--green); color: var(--green); }
+  .badge-sec { border-color: var(--red); color: var(--red); }
+
+  /* INPUT GROUP */
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .service-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+  }
+
+  .service-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    min-width: 110px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .token-input {
+    flex: 1;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--text-muted);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 0;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+
+  .token-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0,220,255,0.2);
+  }
+
+  .token-input::placeholder { color: var(--text-muted); }
+
+  .validate-btn {
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .validate-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--cyan);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .validate-btn:hover { color: var(--bg); }
+  .validate-btn:hover::before { opacity: 1; }
+  .validate-btn span { position: relative; z-index: 1; }
+
+  .validate-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* STATUS INDICATOR */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-muted);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .status-dot.live {
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse-green 2s infinite;
+  }
+
+  .status-dot.dead {
+    background: var(--red);
+    box-shadow: 0 0 8px var(--red);
+  }
+
+  .status-dot.checking {
+    background: var(--yellow);
+    animation: pulse-yellow 0.8s infinite;
+  }
+
+  @keyframes pulse-green {
+    0%,100%{ box-shadow: 0 0 8px var(--green); }
+    50%{ box-shadow: 0 0 16px var(--green), 0 0 30px rgba(0,255,136,0.4); }
+  }
+
+  @keyframes pulse-yellow {
+    0%,100%{ opacity:1; } 50%{ opacity:0.4; }
+  }
+
+  /* RESULT TOOLTIP */
+  .result-msg {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+    padding-left: 2px;
+    min-height: 12px;
+    transition: color 0.3s;
+  }
+  .result-msg.live { color: var(--green); }
+  .result-msg.dead { color: var(--red); }
+  .result-msg.checking { color: var(--yellow); }
+
+  /* CHAT BUTTON */
+  .chat-btn {
+    background: transparent;
+    border: 1px solid var(--purple);
+    color: var(--purple);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    margin-top: 4px;
+    display: none;
+  }
+
+  .chat-btn:hover {
+    background: var(--purple);
+    color: var(--bg);
+  }
+
+  .chat-btn.visible { display: inline-block; }
+
+  /* TERMINAL LOG */
+  .terminal-section {
+    margin-bottom: 40px;
+  }
+
+  .terminal {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--border);
+    padding: 16px;
+    height: 180px;
+    overflow-y: auto;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .terminal::-webkit-scrollbar { width: 4px; }
+  .terminal::-webkit-scrollbar-track { background: transparent; }
+  .terminal::-webkit-scrollbar-thumb { background: var(--border-hot); }
+
+  .log-line { margin: 2px 0; }
+  .log-line .ts { color: var(--text-muted); }
+  .log-line .msg-ok { color: var(--green); }
+  .log-line .msg-err { color: var(--red); }
+  .log-line .msg-info { color: var(--cyan); }
+  .log-line .msg-warn { color: var(--yellow); }
+
+  /* CHAT MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2,4,8,0.92);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .chat-modal {
+    width: 860px;
+    max-width: 95vw;
+    height: 80vh;
+    max-height: 700px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-hot);
+    background: var(--bg2);
+    box-shadow: var(--glow-strong), 0 0 80px rgba(0,220,255,0.1);
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+    animation: modalIn 0.3s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity:0; transform: scale(0.95) translateY(20px); }
+    to { opacity:1; transform: scale(1) translateY(0); }
+  }
+
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0,220,255,0.03);
+    flex-shrink: 0;
+  }
+
+  .chat-header-icon { font-size: 1.4rem; }
+
+  .chat-header-info { flex: 1; }
+
+  .chat-header-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    color: var(--cyan);
+  }
+
+  .chat-header-model {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  .chat-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.6rem;
+    color: var(--green);
+    letter-spacing: 0.15em;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+
+  .close-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    animation: msgIn 0.2s ease;
+  }
+
+  @keyframes msgIn {
+    from { opacity:0; transform: translateY(8px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    background: var(--panel);
+  }
+
+  .msg.user .msg-avatar {
+    border-color: var(--cyan);
+    background: rgba(0,220,255,0.1);
+  }
+
+  .msg-bubble {
+    max-width: 72%;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .msg.assistant .msg-bubble {
+    background: rgba(0,220,255,0.05);
+    border: 1px solid var(--border);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+    color: var(--text);
+  }
+
+  .msg.user .msg-bubble {
+    background: rgba(0,220,255,0.1);
+    border: 1px solid rgba(0,220,255,0.3);
+    clip-path: polygon(8px 0%, 100% 0%, 100% 100%, 0% 100%, 0% 8px);
+    color: var(--cyan);
+    text-align: right;
+  }
+
+  .msg-bubble pre {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    padding: 10px;
+    margin-top: 8px;
+    border-radius: 2px;
+    overflow-x: auto;
+    font-size: 0.72rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    text-align: left;
+    color: var(--cyan2);
+  }
+
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 8px 4px;
+  }
+
+  .typing-dot {
+    width: 6px; height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    animation: typingBounce 1.2s infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%,60%,100%{ transform: translateY(0); opacity:0.4; }
+    30%{ transform: translateY(-6px); opacity:1; }
+  }
+
+  .chat-input-area {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+    flex-shrink: 0;
+  }
+
+  .chat-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .chat-textarea {
+    flex: 1;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--text-muted);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    padding: 10px 14px;
+    outline: none;
+    resize: none;
+    min-height: 42px;
+    max-height: 120px;
+    transition: border-color 0.2s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    line-height: 1.5;
+  }
+
+  .chat-textarea:focus { border-color: var(--cyan); }
+  .chat-textarea::placeholder { color: var(--text-muted); }
+
+  .send-btn {
+    background: var(--cyan);
+    border: none;
+    color: var(--bg);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    padding: 10px 20px;
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all 0.2s;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { background: var(--cyan2); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .model-selector {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    padding: 4px 8px;
+    outline: none;
+    margin-bottom: 8px;
+    width: 100%;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+
+  .model-selector option { background: var(--bg); }
+
+  /* SCAN LINE ANIMATION ON CARD */
+  @keyframes scanCard {
+    0%{ transform: translateY(-100%); opacity:0; }
+    10%{ opacity:0.5; }
+    90%{ opacity:0.5; }
+    100%{ transform: translateY(100%); opacity:0; }
+  }
+
+  .category-card.validating::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent, rgba(0,220,255,0.1), transparent);
+    animation: scanCard 1s ease;
+    pointer-events: none;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 2px;
+    background: var(--border);
+    margin-top: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--cyan2));
+    width: 0%;
+    transition: width 0.4s;
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0;
+    width: 40px; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8));
+  }
+
+  /* VALIDATE ALL BUTTON */
+  .action-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .big-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    padding: 12px 28px;
+    cursor: pointer;
+    border: 1px solid;
+    background: transparent;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+
+  .big-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .big-btn:hover::before { opacity: 1; }
+  .big-btn span { position: relative; z-index: 1; }
+
+  .big-btn-primary { border-color: var(--cyan); color: var(--cyan); }
+  .big-btn-primary::before { background: var(--cyan); }
+  .big-btn-primary:hover { color: var(--bg); }
+
+  .big-btn-secondary { border-color: var(--text-muted); color: var(--text-dim); }
+  .big-btn-secondary::before { background: var(--text-muted); }
+  .big-btn-secondary:hover { color: var(--bg); }
+
+  .big-btn-danger { border-color: var(--red); color: var(--red); }
+  .big-btn-danger::before { background: var(--red); }
+  .big-btn-danger:hover { color: var(--bg); }
+
+  /* RESULTS SUMMARY */
+  .summary-bar {
+    display: flex;
+    gap: 24px;
+    padding: 16px 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+
+  .sum-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+  }
+
+  .sum-count {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .sum-count.live { color: var(--green); text-shadow: 0 0 10px var(--green); }
+  .sum-count.dead { color: var(--red); text-shadow: 0 0 10px var(--red); }
+  .sum-count.neutral { color: var(--text-dim); }
+
+  /* TOOLTIP */
+  .tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg3);
+    border: 1px solid var(--border-hot);
+    padding: 6px 10px;
+    font-size: 0.6rem;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 100;
+    color: var(--text);
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .service-row:hover .tooltip { opacity: 1; }
+
+  /* RESPONSIVE */
+  @media(max-width: 600px) {
+    .logo-title { font-size: 1.6rem; }
+    .category-grid { grid-template-columns: 1fr; }
+    .chat-modal { height: 95vh; }
+    .msg-bubble { max-width: 85%; }
+  }
+
+  /* FLICKER ANIMATION ON LOAD */
+  @keyframes flicker {
+    0%,100%{opacity:1}
+    92%{opacity:1}
+    93%{opacity:0.4}
+    94%{opacity:1}
+    95%{opacity:0.5}
+    96%{opacity:1}
+  }
+
+  .logo-title { animation: flicker 8s infinite; }
+
+  /* ROTATING DECORATIONS */
+  .hex-deco {
+    position: fixed;
+    right: -60px;
+    top: 20%;
+    width: 200px;
+    height: 200px;
+    opacity: 0.03;
+    pointer-events: none;
+    animation: rotate 20s linear infinite;
+    z-index: 1;
+  }
+
+  .hex-deco2 {
+    position: fixed;
+    left: -80px;
+    bottom: 10%;
+    width: 250px;
+    height: 250px;
+    opacity: 0.03;
+    pointer-events: none;
+    animation: rotate 30s linear infinite reverse;
+    z-index: 1;
+  }
+
+  @keyframes rotate { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  /* IMPORT/EXPORT SECTION */
+  .tools-section {
+    margin-bottom: 40px;
+    padding: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .tools-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    margin-right: 8px;
+  }
+
+  /* COPY TO CLIPBOARD */
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* REVEAL TOKEN TOGGLE */
+  .reveal-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 4px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+  .reveal-btn:hover { color: var(--cyan); }
+
+  .service-input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .service-input-wrap .token-input { flex: 1; min-width: 0; padding-right: 30px; }
+
+  .service-input-wrap .reveal-btn {
+    position: absolute;
+    right: 6px;
+    z-index: 2;
+  }
+
+  /* PROGRESS INDICATOR */
+  .scan-progress {
+    margin: 0 0 12px;
+    display: none;
+  }
+
+  .scan-progress.active { display: block; }
+
+  .scan-progress-text {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    letter-spacing: 0.1em;
+  }
+
+  .info-note {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    margin-top: 16px;
+    padding: 8px 12px;
+    border-left: 2px solid var(--border);
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+
+<!-- Decorative SVGs -->
+<svg class="hex-deco" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="100,5 190,50 190,150 100,195 10,150 10,50" stroke="#00dcff" stroke-width="2" fill="none"/>
+  <polygon points="100,25 172,65 172,140 100,178 28,140 28,65" stroke="#00dcff" stroke-width="1" fill="none"/>
+  <polygon points="100,45 154,78 154,130 100,161 46,130 46,78" stroke="#00dcff" stroke-width="1" fill="none"/>
+</svg>
+
+<svg class="hex-deco2" viewBox="0 0 250 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="125" cy="125" r="110" stroke="#00dcff" stroke-width="1" stroke-dasharray="8 4"/>
+  <circle cx="125" cy="125" r="85" stroke="#00dcff" stroke-width="1" stroke-dasharray="4 8"/>
+  <circle cx="125" cy="125" r="60" stroke="#00dcff" stroke-width="0.5" stroke-dasharray="2 6"/>
+</svg>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-title cursor">NEXUS</div>
+        <div class="logo-sub">API Token Validator &amp; Recon Terminal</div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <div class="stat-val" id="total-count">0</div>
+          <div class="stat-lbl">TOTAL</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" id="live-count" style="color:var(--green)">0</div>
+          <div class="stat-lbl">LIVE</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" id="dead-count" style="color:var(--red)">0</div>
+          <div class="stat-lbl">DEAD</div>
+        </div>
+      </div>
+    </div>
+    <div class="corner-tl"></div>
+    <div class="corner-br"></div>
+  </header>
+
+  <!-- Action Row -->
+  <div class="action-row">
+    <button class="big-btn big-btn-primary" onclick="validateAll()"><span>⚡ VALIDATE ALL</span></button>
+    <button class="big-btn big-btn-secondary" onclick="clearAll()"><span>⊘ CLEAR ALL</span></button>
+    <button class="big-btn big-btn-danger" onclick="exportResults()"><span>↓ EXPORT RESULTS</span></button>
+  </div>
+
+  <!-- Scan Progress -->
+  <div class="scan-progress" id="scan-progress">
+    <div class="scan-progress-text" id="scan-progress-text">Scanning 0 / 0</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- Summary Bar -->
+  <div class="summary-bar" id="summary-bar" style="display:none">
+    <div class="sum-item">
+      <div class="sum-count live" id="sum-live">0</div>
+      <div>LIVE TOKENS</div>
+    </div>
+    <div class="sum-item">
+      <div class="sum-count dead" id="sum-dead">0</div>
+      <div>DEAD / INVALID</div>
+    </div>
+    <div class="sum-item">
+      <div class="sum-count neutral" id="sum-untested">0</div>
+      <div>UNTESTED</div>
+    </div>
+  </div>
+
+  <!-- TERMINAL LOG -->
+  <div class="terminal-section">
+    <div class="section-title">SYSTEM LOG</div>
+    <div class="terminal" id="terminal">
+      <div class="log-line"><span class="ts">[00:00:00]</span> <span class="msg-info">NEXUS API Validator v2.7.1 — Initialized</span></div>
+      <div class="log-line"><span class="ts">[00:00:00]</span> <span class="msg-info">Awaiting token input. Enter API keys and press VALIDATE.</span></div>
+      <div class="log-line"><span class="ts">[00:00:00]</span> <span class="msg-warn">⚠ Note: Validation calls actual API endpoints. Use only on tokens you own or are authorized to test.</span></div>
+    </div>
+  </div>
+
+  <!-- CATEGORY GRID -->
+  <div class="section-title">API ENDPOINTS</div>
+  <div class="category-grid" id="category-grid">
+    <!-- Generated by JS -->
+  </div>
+
+  <div class="info-note">
+    ⚠ For security research and authorized penetration testing only. All validation calls real API endpoints — some providers may log failed authentication attempts. CORS restrictions may prevent certain validations in-browser; use a local proxy if needed. Live AI tokens unlock the integrated chat terminal for direct interaction.
+  </div>
+</div>
+
+<!-- CHAT MODAL -->
+<div class="modal-overlay" id="chat-modal">
+  <div class="chat-modal">
+    <div class="chat-header">
+      <div class="chat-header-icon" id="chat-icon">🤖</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name" id="chat-name">AI TERMINAL</div>
+        <div class="chat-header-model" id="chat-model">model loading...</div>
+      </div>
+      <div class="chat-status">
+        <div class="status-dot live"></div>
+        LIVE
+      </div>
+      <button class="close-btn" onclick="closeChat()">✕</button>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="msg assistant" id="welcome-msg">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-bubble">
+          Terminal connected. Token validated. You are now interfacing with the AI via your authenticated key. How can I assist?
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-area">
+      <select class="model-selector" id="model-selector" style="display:none"></select>
+      <div class="chat-input-row">
+        <textarea class="chat-textarea" id="chat-input" placeholder="Enter command..." rows="1"
+          onkeydown="handleChatKey(event)"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()"><span>SEND ▶</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG: All API definitions
+// ============================================================
+const APIS = [
+  // ---- AI / LLM ----
+  {
+    category: 'AI Models',
+    icon: '🧠',
+    badge: 'AI',
+    services: [
+      {
+        id: 'openai',
+        label: 'OpenAI',
+        placeholder: 'sk-...',
+        type: 'chat',
+        aiProvider: 'openai',
+        validate: async (key) => {
+          const r = await fetch('https://api.openai.com/v1/models', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) return { live: true, info: 'OpenAI key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const r = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || 'gpt-5.4', messages })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return j.choices[0].message.content;
+        },
+        models: [
+          'gpt-5.4',
+          'gpt-5.4-mini',
+          'gpt-5.4-nano',
+          'gpt-5.3',
+          'gpt-5.2',
+          'gpt-5',
+          'gpt-4.1',
+          'gpt-4.1-mini',
+          'gpt-4.1-nano',
+          'gpt-4o',
+          'gpt-4o-mini',
+          'gpt-4-turbo',
+          'o4-mini',
+          'o3',
+          'o3-mini',
+          'o1',
+          'o1-mini'
+        ]
+      },
+      {
+        id: 'anthropic',
+        label: 'Anthropic / Claude',
+        placeholder: 'sk-ant-...',
+        type: 'chat',
+        aiProvider: 'anthropic',
+        validate: async (key) => {
+          const r = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'x-api-key': key,
+              'anthropic-version': '2023-06-01',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'claude-haiku-4-5-20251001',
+              max_tokens: 5,
+              messages: [{ role: 'user', content: 'hi' }]
+            })
+          });
+          if (r.status === 200) return { live: true, info: 'Claude key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const r = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'x-api-key': key,
+              'anthropic-version': '2023-06-01',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: model || 'claude-haiku-4-5-20251001',
+              max_tokens: 1024,
+              messages
+            })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return j.content[0].text;
+        },
+        models: [
+          'claude-opus-4-6',
+          'claude-sonnet-4-6',
+          'claude-haiku-4-5-20251001',
+          'claude-opus-4-5',
+          'claude-sonnet-4-5',
+          'claude-sonnet-3-7',
+          'claude-haiku-3-5',
+          'claude-opus-3',
+          'claude-sonnet-3-5',
+          'claude-haiku-3'
+        ]
+      },
+      {
+        id: 'gemini',
+        label: 'Google Gemini',
+        placeholder: 'AIza...',
+        type: 'chat',
+        aiProvider: 'gemini',
+        validate: async (key) => {
+          const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+          if (r.status === 200) return { live: true, info: 'Gemini key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const geminiMsgs = messages.map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+          }));
+          const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-2.5-flash'}:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: geminiMsgs })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return j.candidates[0].content.parts[0].text;
+        },
+        models: [
+          'gemini-3.1-pro-preview',
+          'gemini-3.1-flash-lite-preview',
+          'gemini-3-flash-preview',
+          'gemini-2.5-pro',
+          'gemini-2.5-flash',
+          'gemini-2.5-flash-lite',
+          'gemini-2.0-flash',
+          'gemini-2.0-flash-lite',
+          'gemini-1.5-pro',
+          'gemini-1.5-flash',
+          'gemini-1.0-pro'
+        ]
+      },
+      {
+        id: 'deepseek',
+        label: 'DeepSeek',
+        placeholder: 'sk-...',
+        type: 'chat',
+        aiProvider: 'deepseek',
+        validate: async (key) => {
+          const r = await fetch('https://api.deepseek.com/v1/models', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) return { live: true, info: 'DeepSeek key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const r = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || 'deepseek-chat', messages })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return j.choices[0].message.content;
+        },
+        models: ['deepseek-chat', 'deepseek-reasoner', 'deepseek-coder']
+      },
+      {
+        id: 'groq',
+        label: 'Groq',
+        placeholder: 'gsk_...',
+        type: 'chat',
+        aiProvider: 'groq',
+        validate: async (key) => {
+          const r = await fetch('https://api.groq.com/openai/v1/models', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) return { live: true, info: 'Groq key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || 'llama-3.3-70b-versatile', messages })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return j.choices[0].message.content;
+        },
+        models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it']
+      },
+      {
+        id: 'mistral',
+        label: 'Mistral AI',
+        placeholder: 'API key...',
+        type: 'chat',
+        aiProvider: 'mistral',
+        validate: async (key) => {
+          const r = await fetch('https://api.mistral.ai/v1/models', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) return { live: true, info: 'Mistral key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.message || `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || 'mistral-large-3-latest', messages })
+          });
+          const j = await r.json();
+          if (j.message) throw new Error(j.message);
+          return j.choices[0].message.content;
+        },
+        models: [
+          'mistral-large-3-latest',
+          'mistral-large-latest',
+          'mistral-medium-3-latest',
+          'mistral-medium-latest',
+          'mistral-small-3-1-latest',
+          'mistral-small-latest',
+          'magistral-medium-latest',
+          'magistral-small-latest',
+          'codestral-latest',
+          'devstral-small-latest'
+        ]
+      },
+      {
+        id: 'cohere',
+        label: 'Cohere',
+        placeholder: 'API key...',
+        type: 'chat',
+        aiProvider: 'cohere',
+        validate: async (key) => {
+          const r = await fetch('https://api.cohere.ai/v1/check-api-key', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }
+          });
+          if (r.status === 200) return { live: true, info: 'Cohere key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const lastMsg = messages[messages.length - 1];
+          const history = messages.slice(0, -1).map(m => ({ role: m.role === 'assistant' ? 'CHATBOT' : 'USER', message: m.content }));
+          const r = await fetch('https://api.cohere.ai/v1/chat', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || 'command-r-plus', message: lastMsg.content, chat_history: history })
+          });
+          const j = await r.json();
+          if (j.message) throw new Error(j.message);
+          return j.text;
+        },
+        models: ['command-r-plus', 'command-r', 'command', 'command-light']
+      },
+      {
+        id: 'xai',
+        label: 'xAI / Grok',
+        placeholder: 'xai-...',
+        type: 'chat',
+        aiProvider: 'xai',
+        validate: async (key) => {
+          const r = await fetch('https://api.x.ai/v1/models', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) return { live: true, info: 'xAI Grok key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const r = await fetch('https://api.x.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || 'grok-4', messages })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return j.choices[0].message.content;
+        },
+        models: [
+          'grok-4',
+          'grok-3',
+          'grok-3-mini',
+          'grok-2-1212',
+          'grok-2-vision-1212',
+          'grok-vision-beta',
+          'grok-beta'
+        ]
+      },
+      {
+        id: 'huggingface',
+        label: 'HuggingFace',
+        placeholder: 'hf_...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://huggingface.co/api/whoami', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `HF user: ${j.name || 'valid'}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'together',
+        label: 'Together AI',
+        placeholder: 'API key...',
+        type: 'chat',
+        aiProvider: 'together',
+        validate: async (key) => {
+          const r = await fetch('https://api.together.xyz/v1/models', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) return { live: true, info: 'Together AI key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const r = await fetch('https://api.together.xyz/v1/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || 'meta-llama/Llama-3.3-70B-Instruct-Turbo', messages })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return j.choices[0].message.content;
+        },
+        models: ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'mistralai/Mistral-7B-Instruct-v0.1', 'Qwen/Qwen2.5-72B-Instruct-Turbo']
+      },
+      {
+        id: 'replicate',
+        label: 'Replicate',
+        placeholder: 'r8_...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.replicate.com/v1/account', {
+            headers: { Authorization: `Token ${key}` }
+          });
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `Replicate user: ${j.username || 'valid'}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'perplexity',
+        label: 'Perplexity AI',
+        placeholder: 'pplx-...',
+        type: 'chat',
+        aiProvider: 'perplexity',
+        validate: async (key) => {
+          const r = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'llama-3.1-sonar-small-128k-chat', max_tokens: 5, messages: [{ role: 'user', content: 'hi' }] })
+          });
+          if (r.status === 200) return { live: true, info: 'Perplexity key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        },
+        chat: async (key, model, messages) => {
+          const r = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: model || 'llama-3.1-sonar-large-128k-online', messages })
+          });
+          const j = await r.json();
+          if (j.error) throw new Error(j.error.message);
+          return j.choices[0].message.content;
+        },
+        models: ['llama-3.1-sonar-large-128k-online', 'llama-3.1-sonar-small-128k-online', 'llama-3.1-sonar-huge-128k-online']
+      }
+    ]
+  },
+
+  // ---- Google APIs ----
+  {
+    category: 'Google APIs',
+    icon: '🔍',
+    badge: 'CLOUD',
+    services: [
+      {
+        id: 'google-maps',
+        label: 'Google Maps',
+        placeholder: 'AIza...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Pkwy&key=${key}`);
+          const j = await r.json();
+          if (j.status === 'OK' || j.status === 'ZERO_RESULTS') return { live: true, info: `Maps API: ${j.status}` };
+          return { live: false, info: j.error_message || j.status };
+        }
+      },
+      {
+        id: 'google-places',
+        label: 'Google Places',
+        placeholder: 'AIza...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=Museum+of+Contemporary+Art+Australia&inputtype=textquery&key=${key}`);
+          const j = await r.json();
+          if (j.status === 'OK' || j.status === 'ZERO_RESULTS') return { live: true, info: `Places: ${j.status}` };
+          return { live: false, info: j.error_message || j.status };
+        }
+      },
+      {
+        id: 'google-custom-search',
+        label: 'Google Custom Search',
+        placeholder: 'AIza...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://www.googleapis.com/customsearch/v1?key=${key}&cx=017576662512468239146:omuauf_lfve&q=test`);
+          if (r.status === 200) return { live: true, info: 'Custom Search API valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'youtube-data',
+        label: 'YouTube Data API',
+        placeholder: 'AIza...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://www.googleapis.com/youtube/v3/videos?id=dQw4w9WgXcQ&part=snippet&key=${key}`);
+          if (r.status === 200) return { live: true, info: 'YouTube Data API valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'firebase',
+        label: 'Firebase / GCP',
+        placeholder: 'AIza...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ returnSecureToken: false })
+          });
+          const j = await r.json().catch(()=>({}));
+          // If we get EMAIL_EXISTS or OPERATION_NOT_ALLOWED (not API_KEY_INVALID), key works
+          if (r.status !== 400 || (j.error?.message && j.error.message !== 'API_KEY_INVALID')) {
+            return { live: true, info: `Firebase: ${j.error?.message || 'key valid'}` };
+          }
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        }
+      }
+    ]
+  },
+
+  // ---- Microsoft / Bing ----
+  {
+    category: 'Microsoft / Azure',
+    icon: '🪟',
+    badge: 'CLOUD',
+    services: [
+      {
+        id: 'bing-search',
+        label: 'Bing Search API',
+        placeholder: 'Ocp-Apim...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.bing.microsoft.com/v7.0/search?q=test&count=1', {
+            headers: { 'Ocp-Apim-Subscription-Key': key }
+          });
+          if (r.status === 200) return { live: true, info: 'Bing Search API valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'bing-maps',
+        label: 'Bing Maps API',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://dev.virtualearth.net/REST/v1/Locations?q=Seattle&key=${key}`);
+          const j = await r.json().catch(()=>({}));
+          if (j.authenticationResultCode === 'ValidCredentials') return { live: true, info: 'Bing Maps key valid' };
+          return { live: false, info: j.authenticationResultCode || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'azure-openai',
+        label: 'Azure OpenAI',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          // Without endpoint URL we can only check key format
+          if (!key || key.length < 20) return { live: false, info: 'Key too short' };
+          return { live: true, info: 'Key format OK (provide endpoint for full test)' };
+        }
+      },
+      {
+        id: 'azure-cognitive',
+        label: 'Azure Cognitive',
+        placeholder: 'Ocp-Apim...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.cognitive.microsofttranslator.com/languages?api-version=3.0', {
+            headers: { 'Ocp-Apim-Subscription-Key': key }
+          });
+          if (r.status === 200) return { live: true, info: 'Azure Cognitive key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      }
+    ]
+  },
+
+  // ---- Security / Recon ----
+  {
+    category: 'Security & Recon',
+    icon: '🔐',
+    badge: 'SEC',
+    services: [
+      {
+        id: 'shodan',
+        label: 'Shodan',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://api.shodan.io/api-info?key=${key}`);
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `Shodan credits: ${j.query_credits}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'virustotal',
+        label: 'VirusTotal',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://www.virustotal.com/api/v3/ip_addresses/8.8.8.8', {
+            headers: { 'x-apikey': key }
+          });
+          if (r.status === 200) return { live: true, info: 'VirusTotal key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'abuseipdb',
+        label: 'AbuseIPDB',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.abuseipdb.com/api/v2/check?ipAddress=8.8.8.8', {
+            headers: { Key: key, Accept: 'application/json' }
+          });
+          if (r.status === 200) return { live: true, info: 'AbuseIPDB key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'haveibeenpwned',
+        label: 'HaveIBeenPwned',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://haveibeenpwned.com/api/v3/breachedaccount/test@example.com', {
+            headers: { 'hibp-api-key': key }
+          });
+          // 404 means no breach (key works); 401 = invalid key
+          if (r.status === 404 || r.status === 200) return { live: true, info: 'HIBP key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'censys',
+        label: 'Censys',
+        placeholder: 'API ID:SECRET',
+        type: 'info',
+        validate: async (key) => {
+          const [id, secret] = key.split(':');
+          if (!id || !secret) return { live: false, info: 'Format: API_ID:SECRET' };
+          const r = await fetch('https://search.censys.io/api/v2/certificates?q=test&per_page=1', {
+            headers: { Authorization: `Basic ${btoa(`${id}:${secret}`)}` }
+          });
+          if (r.status === 200) return { live: true, info: 'Censys credentials valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'securitytrails',
+        label: 'SecurityTrails',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.securitytrails.com/v1/ping', {
+            headers: { apikey: key }
+          });
+          if (r.status === 200) return { live: true, info: 'SecurityTrails key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'greynoise',
+        label: 'GreyNoise',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.greynoise.io/ping', {
+            headers: { key }
+          });
+          if (r.status === 200) return { live: true, info: 'GreyNoise key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'ipinfo',
+        label: 'IPInfo',
+        placeholder: 'token...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://ipinfo.io/8.8.8.8?token=${key}`);
+          if (r.status === 200) return { live: true, info: 'IPInfo token valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      }
+    ]
+  },
+
+  // ---- Maps / Geo ----
+  {
+    category: 'Maps & Geolocation',
+    icon: '🗺️',
+    badge: 'MAPS',
+    services: [
+      {
+        id: 'mapbox',
+        label: 'Mapbox',
+        placeholder: 'pk.eyJ1...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/seattle.json?access_token=${key}`);
+          if (r.status === 200) return { live: true, info: 'Mapbox token valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.message || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'here-maps',
+        label: 'HERE Maps',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=seattle&apiKey=${key}`);
+          if (r.status === 200) return { live: true, info: 'HERE Maps key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'opencage',
+        label: 'OpenCage Geocoding',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=52.3877830+9.7334394&key=${key}&limit=1`);
+          const j = await r.json().catch(()=>({}));
+          if (r.status === 200 && j.status?.code === 200) return { live: true, info: `OpenCage: ${j.rate?.remaining} req remaining` };
+          return { live: false, info: j.status?.message || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'tomtom',
+        label: 'TomTom',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://api.tomtom.com/search/2/geocode/Seattle.json?key=${key}`);
+          if (r.status === 200) return { live: true, info: 'TomTom key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      }
+    ]
+  },
+
+  // ---- Communication & Social ----
+  {
+    category: 'Communication & Social',
+    icon: '💬',
+    badge: 'SOCIAL',
+    services: [
+      {
+        id: 'twilio',
+        label: 'Twilio',
+        placeholder: 'ACCOUNT_SID:AUTH_TOKEN',
+        type: 'info',
+        validate: async (key) => {
+          const [sid, token] = key.split(':');
+          if (!sid || !token) return { live: false, info: 'Format: SID:AUTH_TOKEN' };
+          const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}.json`, {
+            headers: { Authorization: `Basic ${btoa(`${sid}:${token}`)}` }
+          });
+          if (r.status === 200) return { live: true, info: 'Twilio credentials valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'sendgrid',
+        label: 'SendGrid',
+        placeholder: 'SG...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.sendgrid.com/v3/user/profile', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) return { live: true, info: 'SendGrid key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'slack',
+        label: 'Slack Bot Token',
+        placeholder: 'xoxb-...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://slack.com/api/auth.test', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          const j = await r.json().catch(()=>({}));
+          if (j.ok) return { live: true, info: `Slack team: ${j.team || 'valid'}` };
+          return { live: false, info: j.error || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'discord',
+        label: 'Discord Bot Token',
+        placeholder: 'Bot token...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://discord.com/api/v10/users/@me', {
+            headers: { Authorization: `Bot ${key}` }
+          });
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `Discord bot: ${j.username || 'valid'}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'github',
+        label: 'GitHub PAT',
+        placeholder: 'ghp_... or github_pat_...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.github.com/user', {
+            headers: { Authorization: `token ${key}`, 'User-Agent': 'NEXUS-Validator' }
+          });
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `GitHub: ${j.login}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'gitlab',
+        label: 'GitLab PAT',
+        placeholder: 'glpat-...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://gitlab.com/api/v4/user', {
+            headers: { 'PRIVATE-TOKEN': key }
+          });
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `GitLab: ${j.username || 'valid'}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      }
+    ]
+  },
+
+  // ---- Cloud / Infrastructure ----
+  {
+    category: 'Cloud & Infrastructure',
+    icon: '☁️',
+    badge: 'CLOUD',
+    services: [
+      {
+        id: 'aws',
+        label: 'AWS (check format)',
+        placeholder: 'AKIA... (key ID)',
+        type: 'info',
+        validate: async (key) => {
+          // AWS STS requires signing; we do a format check
+          if (/^AKIA[0-9A-Z]{16}$/.test(key)) return { live: true, info: 'AWS key format valid (AKIA prefix). Use AWS CLI to fully verify.' };
+          if (/^ASIA[0-9A-Z]{16}$/.test(key)) return { live: true, info: 'AWS temp key format valid (ASIA prefix).' };
+          return { live: false, info: 'Invalid AWS key ID format' };
+        }
+      },
+      {
+        id: 'digitalocean',
+        label: 'DigitalOcean',
+        placeholder: 'API token...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.digitalocean.com/v2/account', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `DO email: ${j.account?.email || 'valid'}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'stripe',
+        label: 'Stripe',
+        placeholder: 'sk_live_... or sk_test_...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.stripe.com/v1/account', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `Stripe: ${j.email || j.id || 'valid'}` };
+          }
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'cloudflare',
+        label: 'Cloudflare',
+        placeholder: 'API token...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          const j = await r.json().catch(()=>({}));
+          if (j.success) return { live: true, info: `CF token: ${j.result?.status}` };
+          return { live: false, info: j.errors?.[0]?.message || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'linode',
+        label: 'Linode / Akamai',
+        placeholder: 'API token...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.linode.com/v4/profile', {
+            headers: { Authorization: `Bearer ${key}` }
+          });
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `Linode: ${j.username || 'valid'}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      }
+    ]
+  },
+
+  // ---- Search Engines ----
+  {
+    category: 'Search APIs',
+    icon: '🔎',
+    badge: 'SEARCH',
+    services: [
+      {
+        id: 'serpapi',
+        label: 'SerpAPI',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://serpapi.com/account?api_key=${key}`);
+          if (r.status === 200) {
+            const j = await r.json();
+            return { live: true, info: `SerpAPI credits: ${j.total_searches_left || 'valid'}` };
+          }
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'brave-search',
+        label: 'Brave Search',
+        placeholder: 'BSA...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch('https://api.search.brave.com/res/v1/web/search?q=test&count=1', {
+            headers: { 'X-Subscription-Token': key, Accept: 'application/json' }
+          });
+          if (r.status === 200) return { live: true, info: 'Brave Search key valid' };
+          return { live: false, info: `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'weatherapi',
+        label: 'WeatherAPI',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://api.weatherapi.com/v1/current.json?key=${key}&q=London`);
+          if (r.status === 200) return { live: true, info: 'WeatherAPI key valid' };
+          const j = await r.json().catch(()=>({}));
+          return { live: false, info: j.error?.message || `HTTP ${r.status}` };
+        }
+      },
+      {
+        id: 'newsapi',
+        label: 'NewsAPI',
+        placeholder: 'API key...',
+        type: 'info',
+        validate: async (key) => {
+          const r = await fetch(`https://newsapi.org/v2/top-headlines?country=us&apiKey=${key}&pageSize=1`);
+          const j = await r.json().catch(()=>({}));
+          if (j.status === 'ok') return { live: true, info: `NewsAPI: ${j.totalResults} articles` };
+          return { live: false, info: j.message || `HTTP ${r.status}` };
+        }
+      }
+    ]
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  results: {},
+  chatContext: null,
+  chatHistory: [],
+  totalChecked: 0,
+  totalLive: 0,
+  totalDead: 0
+};
+
+// ============================================================
+// BUILD UI
+// ============================================================
+function buildUI() {
+  const grid = document.getElementById('category-grid');
+  grid.innerHTML = '';
+
+  APIS.forEach(cat => {
+    const card = document.createElement('div');
+    card.className = 'category-card';
+    card.id = `cat-${cat.services[0].id}`;
+
+    const badgeClass = {
+      'AI': 'badge-ai', 'MAPS': 'badge-maps', 'SEARCH': 'badge-search',
+      'CLOUD': 'badge-cloud', 'SOCIAL': 'badge-social', 'SEC': 'badge-sec'
+    }[cat.badge] || 'badge-ai';
+
+    let servicesHTML = '';
+    cat.services.forEach(svc => {
+      servicesHTML += `
+        <div class="input-group" id="svc-group-${svc.id}">
+          <div class="service-row">
+            <div class="status-dot" id="dot-${svc.id}"></div>
+            <div class="service-label">${svc.label}</div>
+            <div class="service-input-wrap">
+              <input type="password" class="token-input" id="input-${svc.id}" placeholder="${svc.placeholder}" autocomplete="off" spellcheck="false">
+              <button class="reveal-btn" onclick="toggleReveal('${svc.id}')" title="Show/Hide">👁</button>
+            </div>
+            <button class="validate-btn" id="btn-${svc.id}" onclick="validateSingle('${svc.id}')">
+              <span>TEST</span>
+            </button>
+          </div>
+          <div class="result-msg" id="msg-${svc.id}"></div>
+          ${svc.type === 'chat' ? `<button class="chat-btn" id="chat-btn-${svc.id}" onclick="openChat('${svc.id}')">💬 OPEN TERMINAL</button>` : ''}
+        </div>
+      `;
+    });
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="cat-icon">${cat.icon}</div>
+        <div class="cat-name">${cat.category}</div>
+        <div class="cat-badge ${badgeClass}">${cat.badge}</div>
+      </div>
+      ${servicesHTML}
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+// ============================================================
+// VALIDATION
+// ============================================================
+async function validateSingle(svcId) {
+  const svc = findService(svcId);
+  if (!svc) return;
+
+  const key = document.getElementById(`input-${svcId}`).value.trim();
+  if (!key) {
+    setStatus(svcId, 'dead', '⚠ No token entered');
+    return;
+  }
+
+  setStatus(svcId, 'checking', 'Validating...');
+  const btn = document.getElementById(`btn-${svcId}`);
+  btn.disabled = true;
+
+  try {
+    const result = await svc.validate(key);
+    if (result.live) {
+      setStatus(svcId, 'live', `✓ LIVE — ${result.info}`);
+      log(`✓ [${svc.label}] LIVE — ${result.info}`, 'ok');
+      state.results[svcId] = { status: 'live', info: result.info, label: svc.label, key };
+      if (svc.type === 'chat') {
+        const chatBtn = document.getElementById(`chat-btn-${svcId}`);
+        if (chatBtn) chatBtn.classList.add('visible');
+      }
+    } else {
+      setStatus(svcId, 'dead', `✗ DEAD — ${result.info}`);
+      log(`✗ [${svc.label}] DEAD — ${result.info}`, 'err');
+      state.results[svcId] = { status: 'dead', info: result.info, label: svc.label };
+    }
+  } catch(e) {
+    const errMsg = e.message.includes('Failed to fetch') ? 'CORS/Network error — try proxy' : e.message;
+    setStatus(svcId, 'dead', `✗ ERROR — ${errMsg}`);
+    log(`✗ [${svc.label}] ERROR — ${errMsg}`, 'err');
+    state.results[svcId] = { status: 'error', info: errMsg, label: svc.label };
+  }
+
+  btn.disabled = false;
+  updateStats();
+}
+
+async function validateAll() {
+  const allServices = APIS.flatMap(c => c.services);
+  const toValidate = allServices.filter(s => document.getElementById(`input-${s.id}`)?.value.trim());
+
+  if (toValidate.length === 0) {
+    log('No tokens entered. Fill in API keys first.', 'warn');
+    return;
+  }
+
+  const progress = document.getElementById('scan-progress');
+  const progressText = document.getElementById('scan-progress-text');
+  const progressFill = document.getElementById('progress-fill');
+  progress.classList.add('active');
+
+  log(`Starting batch validation of ${toValidate.length} tokens...`, 'info');
+
+  let done = 0;
+  for (const svc of toValidate) {
+    progressText.textContent = `Scanning ${done + 1} / ${toValidate.length} — ${svc.label}`;
+    progressFill.style.width = `${((done) / toValidate.length) * 100}%`;
+    await validateSingle(svc.id);
+    done++;
+    await sleep(150);
+  }
+
+  progressFill.style.width = '100%';
+  progressText.textContent = `Scan complete — ${done} tokens checked`;
+  setTimeout(() => progress.classList.remove('active'), 3000);
+
+  document.getElementById('summary-bar').style.display = 'flex';
+  updateStats();
+  log(`Batch scan complete. ${state.totalLive} live, ${state.totalDead} dead.`, 'info');
+}
+
+function findService(id) {
+  for (const cat of APIS) {
+    const svc = cat.services.find(s => s.id === id);
+    if (svc) return svc;
+  }
+  return null;
+}
+
+function setStatus(svcId, status, msg) {
+  const dot = document.getElementById(`dot-${svcId}`);
+  const msgEl = document.getElementById(`msg-${svcId}`);
+
+  dot.className = 'status-dot ' + status;
+  msgEl.textContent = msg;
+  msgEl.className = `result-msg ${status}`;
+}
+
+function updateStats() {
+  const all = Object.values(state.results);
+  const live = all.filter(r => r.status === 'live').length;
+  const dead = all.filter(r => r.status !== 'live').length;
+  const allServices = APIS.flatMap(c => c.services);
+  const withTokens = allServices.filter(s => document.getElementById(`input-${s.id}`)?.value.trim()).length;
+
+  document.getElementById('live-count').textContent = live;
+  document.getElementById('dead-count').textContent = dead;
+  document.getElementById('total-count').textContent = withTokens;
+
+  document.getElementById('sum-live').textContent = live;
+  document.getElementById('sum-dead').textContent = dead;
+  document.getElementById('sum-untested').textContent = Math.max(0, withTokens - live - dead);
+}
+
+// ============================================================
+// CHAT
+// ============================================================
+function openChat(svcId) {
+  const svc = findService(svcId);
+  if (!svc) return;
+  const key = document.getElementById(`input-${svcId}`)?.value.trim();
+  if (!key) return;
+
+  state.chatContext = { svc, key };
+  state.chatHistory = [];
+
+  document.getElementById('chat-name').textContent = svc.label.toUpperCase() + ' TERMINAL';
+  document.getElementById('chat-model').textContent = svc.aiProvider + ' · ' + (svc.models?.[0] || 'default');
+  document.getElementById('chat-icon').textContent = { openai: '🟢', anthropic: '🟣', gemini: '🔵', deepseek: '🔵', groq: '⚡', mistral: '🌊', cohere: '🟡', xai: '✖', perplexity: '🔷', together: '🤝' }[svc.aiProvider] || '🤖';
+
+  // Build model selector
+  const sel = document.getElementById('model-selector');
+  if (svc.models && svc.models.length > 1) {
+    sel.innerHTML = svc.models.map(m => `<option value="${m}">${m}</option>`).join('');
+    sel.style.display = 'block';
+  } else {
+    sel.style.display = 'none';
+  }
+
+  // Reset messages
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML = `
+    <div class="msg assistant">
+      <div class="msg-avatar">${document.getElementById('chat-icon').textContent}</div>
+      <div class="msg-bubble">
+        ▌ Terminal connected. <strong>${svc.label}</strong> API validated. You are interfacing live. Send your first message.
+      </div>
+    </div>
+  `;
+
+  document.getElementById('chat-modal').classList.add('open');
+  document.getElementById('chat-input').focus();
+}
+
+function closeChat() {
+  document.getElementById('chat-modal').classList.remove('open');
+  state.chatContext = null;
+  state.chatHistory = [];
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !state.chatContext) return;
+
+  const { svc, key } = state.chatContext;
+  const model = document.getElementById('model-selector').value || svc.models?.[0];
+
+  // Add user message
+  state.chatHistory.push({ role: 'user', content: text });
+  appendMessage('user', text, '👤');
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Disable send
+  const sendBtn = document.getElementById('send-btn');
+  sendBtn.disabled = true;
+
+  // Show typing
+  const typingId = showTyping(svc);
+
+  try {
+    const reply = await svc.chat(key, model, [...state.chatHistory]);
+    removeTyping(typingId);
+    state.chatHistory.push({ role: 'assistant', content: reply });
+    appendMessage('assistant', reply, document.getElementById('chat-icon').textContent);
+  } catch(e) {
+    removeTyping(typingId);
+    appendMessage('assistant', `⚠ Error: ${e.message}`, '⚠');
+  }
+
+  sendBtn.disabled = false;
+  input.focus();
+}
+
+function appendMessage(role, content, avatar) {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  // Format code blocks
+  const formatted = content
+    .replace(/```([\w]*)\n?([\s\S]*?)```/g, (_, lang, code) => `<pre>${escapeHtml(code.trim())}</pre>`)
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,220,255,0.1);padding:1px 5px;border-radius:2px;font-size:0.85em">$1</code>')
+    .replace(/\n/g, '<br>');
+
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-bubble">${formatted}</div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping(svc) {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  const id = 'typing-' + Date.now();
+  div.id = id;
+  div.className = 'msg assistant';
+  div.innerHTML = `
+    <div class="msg-avatar">${document.getElementById('chat-icon').textContent}</div>
+    <div class="msg-bubble">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return id;
+}
+
+function removeTyping(id) {
+  document.getElementById(id)?.remove();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function log(msg, type = 'info') {
+  const terminal = document.getElementById('terminal');
+  const now = new Date();
+  const ts = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const classMap = { ok: 'msg-ok', err: 'msg-err', info: 'msg-info', warn: 'msg-warn' };
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="ts">[${ts}]</span> <span class="${classMap[type] || 'msg-info'}">${escapeHtml(msg)}</span>`;
+  terminal.appendChild(line);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function escapeHtml(t) {
+  return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function toggleReveal(svcId) {
+  const input = document.getElementById(`input-${svcId}`);
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function clearAll() {
+  APIS.flatMap(c => c.services).forEach(svc => {
+    const input = document.getElementById(`input-${svc.id}`);
+    if (input) input.value = '';
+    setStatus(svc.id, '', '');
+    if (svc.type === 'chat') {
+      const chatBtn = document.getElementById(`chat-btn-${svc.id}`);
+      if (chatBtn) chatBtn.classList.remove('visible');
+    }
+  });
+  state.results = {};
+  state.totalLive = 0;
+  state.totalDead = 0;
+  updateStats();
+  document.getElementById('summary-bar').style.display = 'none';
+  log('All tokens cleared.', 'warn');
+}
+
+function exportResults() {
+  const lines = ['NEXUS API Token Validation Report', '='.repeat(50), `Generated: ${new Date().toISOString()}`, ''];
+  Object.entries(state.results).forEach(([id, r]) => {
+    lines.push(`[${r.status.toUpperCase()}] ${r.label}: ${r.info}`);
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `nexus-results-${Date.now()}.txt`;
+  a.click();
+  log('Results exported to file.', 'info');
+}
+
+// Close modal on overlay click
+document.getElementById('chat-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeChat();
+});
+
+// Keyboard shortcut: Escape to close
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeChat();
+});
+
+// ============================================================
+// INIT
+// ============================================================
+buildUI();
+log('UI rendered. ' + APIS.flatMap(c => c.services).length + ' API endpoints loaded.', 'info');
+</script>
+</body>
+</html>
