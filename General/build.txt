@@ -1,4 +1,61 @@
 
+Offensive Security
+Penetration Testing/Ethical Hacking
+Bug Bounty
+Red Teaming
+
+Manual Rooting and Certificate Pinning Bypass without automated tool
+Dynamic instrumentation using Frida
+De-obfuscation of APK/IPA file
+Sandboxing
+DevSecOps
+Threat Modelling
+Threat Intelligence
+SAST/DAST
+Thick clients
+
+Manual testing 
+Writing custom tools (Python/Go)
+Building security automation pipelines (CI/CD)
+Source code review (SAST)
+Exploit Development
+Reverse Engineering
+Malware analysis
+Digital forensics
+
+Linux basics
+Docker
+Docker Compose
+Kubernetes basics
+Cloud platform (AWS/GCP/Azure)
+Terraform
+CI/CD
+MCP/LLM/AI AGENTS
+
+Linux
+Networking
+Infrastructure
+Containerization (Docker/Kubernetes)
+CI/CD Pipelines
+Virtualization
+IAM
+Git
+Cloud
+Terraform
+Monitoring
+DevSecOps
+Trivy
+Wiz
+Vault
+Cloud-native security
+Cryptography (Encryption/Hashing)
+Access Control and Auth
+
+Midleware
+Routes
+Endpoints
+Gateway
+
 - GitHub Pages (Actions)
 - Netlify
 - Cloudflare Pages
@@ -12,16 +69,3 @@ Firebase Hosting -> Site with backend APIs
 Ngrok
 Cloudflare Tunnel
 Oracle Cloud Free Tier
-
-> GIT
-feat: a new feature
-fix: a bug fix
-docs: documentation only changes
-style: code style changes (formatting, missing semicolons, etc.)
-refactor: code change that neither fixes a bug nor adds a feature
-perf: performance improvement
-test: adding or correcting tests
-chore: changes to build process, tooling, etc.
-ci: CI configuration changes
-build: changes that affect the build system or dependencies
-revert: reverts a previous commit
