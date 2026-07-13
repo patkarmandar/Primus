@@ -1,60 +1,20 @@
 
-Offensive Security
-Penetration Testing/Ethical Hacking
-Bug Bounty
-Red Teaming
-
-Manual Rooting and Certificate Pinning Bypass without automated tool
-Dynamic instrumentation using Frida
-De-obfuscation of APK/IPA file
-Sandboxing
-DevSecOps
-Threat Modelling
-Threat Intelligence
-SAST/DAST
-Thick clients
-
-Manual testing 
-Writing custom tools (Python/Go)
-Building security automation pipelines (CI/CD)
-Source code review (SAST)
-Exploit Development
-Reverse Engineering
-Malware analysis
-Digital forensics
-
-Linux basics
-Docker
-Docker Compose
-Kubernetes basics
-Cloud platform (AWS/GCP/Azure)
-Terraform
-CI/CD
-MCP/LLM/AI AGENTS
-
-Linux
-Networking
-Infrastructure
-Containerization (Docker/Kubernetes)
-CI/CD Pipelines
-Virtualization
-IAM
-Git
-Cloud
-Terraform
-Monitoring
-DevSecOps
-Trivy
-Wiz
-Vault
-Cloud-native security
-Cryptography (Encryption/Hashing)
-Access Control and Auth
-
 Midleware
 Routes
 Endpoints
 Gateway
+
+Docker
+Docker Compose
+Kubernetes basics
+Cloud platform (AWS/GCP/Azure)
+CI/CD
+automation pipelines (CI/CD)
+Containerization (Docker/Kubernetes)
+CI/CD Pipelines
+Virtualization
+Git
+Cloud
 
 - GitHub Pages (Actions)
 - Netlify
@@ -69,3 +29,8 @@ Firebase Hosting -> Site with backend APIs
 Ngrok
 Cloudflare Tunnel
 Oracle Cloud Free Tier
+
+Webpack, Vite run
+Electron
+Microservices
+Serverless functions
