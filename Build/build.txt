@@ -34,3 +34,7 @@ Webpack, Vite run
 Electron
 Microservices
 Serverless functions
+
+Supabase
+VPS
+Firebase
