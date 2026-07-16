@@ -1,4 +1,30 @@
 
+Offensive Security
+Penetration Testing/Ethical Hacking
+Bug Bounty
+Red Teaming
+
+Manual Rooting and Certificate Pinning Bypass without automated tool
+Dynamic instrumentation using Frida
+De-obfuscation of APK/IPA file
+Sandboxing
+DevSecOps
+Threat Modelling
+Threat Intelligence
+SAST/DAST
+Thick clients
+
+Manual testing 
+Writing custom tools (Python/Go)
+Building security automation pipelines (CI/CD)
+Source code review (SAST)
+Exploit Development
+Reverse Engineering
+Malware analysis
+Digital forensics
+
+----
+
 Midleware
 Routes
 Endpoints
@@ -38,3 +64,22 @@ Serverless functions
 Supabase
 VPS
 Firebase
+
+Linux
+Networking
+Cryptography (Encryption/Hashing)
+Infrastructure
+Monitoring
+DevSecOps
+Terraform
+Trivy
+Wiz
+Vault
+Cloud-native security
+Access Control and Auth
+IAM
+MCP/LLM/AI AGENTS
+
+----
+
+For pivoting, learn Ligolo-ng. If you have only ever used proxychains or SSH tunnelling, learn Ligolo-ng before the exam. It is significantly more stable in multi-hop environments and you will not want to be learning it mid-exam. Build static Ligolo-ng binaries yourself — precompiled binaries from GitHub releases didn't work for at least one reviewer in the exam environment. 
