@@ -1,85 +1,106 @@
 
-Offensive Security
-Penetration Testing/Ethical Hacking
-Bug Bounty
-Red Teaming
-
-Manual Rooting and Certificate Pinning Bypass without automated tool
-Dynamic instrumentation using Frida
-De-obfuscation of APK/IPA file
-Sandboxing
-DevSecOps
-Threat Modelling
-Threat Intelligence
-SAST/DAST
-Thick clients
-
-Manual testing 
-Writing custom tools (Python/Go)
-Building security automation pipelines (CI/CD)
-Source code review (SAST)
-Exploit Development
-Reverse Engineering
-Malware analysis
-Digital forensics
-
-----
-
-Midleware
+# SE
+Microservices
+Serverless functions
+Edge Functions
+Middleware
 Routes
 Endpoints
 Gateway
+SSR and CSR
+CDN and edge network
+Load balancer
+Web Server
 
-Docker
-Docker Compose
-Kubernetes basics
-Cloud platform (AWS/GCP/Azure)
-CI/CD
-automation pipelines (CI/CD)
-Containerization (Docker/Kubernetes)
-CI/CD Pipelines
-Virtualization
-Git
+PKI/SSL/TLS
+Encryption
+Hashing
+
+# Cloud Computing
 Cloud
-
-- GitHub Pages (Actions)
-- Netlify
-- Cloudflare Pages
-
-Render -> React/Next.js
-Railway
-Varcel
-Netlify -> Static+Serverless
-Cloudflare Pages
-Firebase Hosting -> Site with backend APIs
-Ngrok
-Cloudflare Tunnel
-Oracle Cloud Free Tier
-
-Webpack, Vite run
-Electron
-Microservices
-Serverless functions
-
-Supabase
+Orchestration
+Platform
+Site Reliability
+Containerization
+Docker
+Kubernetes
+Cloud platform (AWS/GCP/Azure)
+Virtualization
+Hypervisor
+VM
 VPS
-Firebase
-
-Linux
-Networking
-Cryptography (Encryption/Hashing)
 Infrastructure
-Monitoring
-DevSecOps
 Terraform
+Backend-as-a-Service (BaaS): provides database, auth, APIs, storage, and often realtime. Fast to build, but their platform remains part of your backend.
+Backend hosting/runtime: write the API yourself; they just run it
+
+
+- GitHub Pages
+- Cloudflare Pages/workers
+- Render -> React/Next.js
+- Railway -> docker
+- Vercel
+- Netlify -> Static + Serverless
+- Firebase Hosting -> Site with backend APIs
+- Supabase
+
+# DevOps
+Git
+CI/CD
+CI/CD Pipelines (automation pipelines)
+Webpack, Vite
+Build Systems
+Version Control
+Jenkins
+Github actions
+Automated Testing
+Building/Testing/Tooling/Deployment
+Workflows
+
+-----
+
+AppSec (Web, API, Android, Thick clients)
+SAST/DAST/SCA/IaC
+Source Code Review (SAST) - Manual & Automated
+Secure SDLC
+Threat Modelling
+Threat Intelligence
+Network Testing
+Red Teaming
+Cloud Security
+DevSecOps
+
+Exploit Development
+Reverse Engineering
+Malware Analysis
+Digital Forensics
+
+OWASP
+MITRE ATT&CK
+Vulnerability Assessment
+CVSS Scoring
+Obfuscation/Hidden
+OS Internals
+Secure Coding Practices
+Security Control
+CVSS
+Fuzzing
+Exploitation
+Trust Boundary
+Request Flow
+Attack Vector
+Scripts, internal tools, custom tools (Python/Go/Shell)
+Security automation tools
+Manual and Automated Code Reviews (Static, Dynamic, Dependency, Supply-chain)
+Secret Handling
+Building security automation pipelines (CI/CD)
 Trivy
 Wiz
 Vault
 Cloud-native security
 Access Control and Auth
 IAM
-MCP/LLM/AI AGENTS
+Authentication
+Authorization (Protocols: JWT, OAUTH2)
 
-----
-
-For pivoting, learn Ligolo-ng. If you have only ever used proxychains or SSH tunnelling, learn Ligolo-ng before the exam. It is significantly more stable in multi-hop environments and you will not want to be learning it mid-exam. Build static Ligolo-ng binaries yourself — precompiled binaries from GitHub releases didn't work for at least one reviewer in the exam environment. 
+AI/ML/Models/Agents/LLM/MCP

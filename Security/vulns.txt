@@ -73,9 +73,12 @@ Android-Specific Vulnerabilities:
 - Android Debug Bridge (ADB) Misconfiguration (Production debug enabled)
 - Insecure Data Storage (World-readable files, SQLite databases without encryption)
 - Weak Cryptography (Hardcoded keys, improper IV usage)
-- Root/Jailbreak Detection Bypass
+- Root/Jailbreak Detection Bypass (Manual Rooting and Certificate Pinning Bypass without automated tool)
 - Dynamic Code Loading (Unverified DEX/APK loading)
+- Dynamic instrumentation (Frida)
+- De-obfuscation of APK/IPA file
 - Insecure Logging (Sensitive data in Logcat)
+- Sandboxing
 
 Other / Infrastructure:
 - Subdomain Takeover
